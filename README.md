@@ -1,4 +1,4 @@
-# Weak Instruments
+# Solutions to Weak Instruments
 
 ## JIVE
 
@@ -6,5 +6,16 @@
 
 
 
-## Next
+## Weak identification with many instruments (Mikushueva and Sun)
+
+
+
+
+
+## Lim et al.
+
+
+
+
+# Jacknife Anderson-Rubin tests for many weak IV inference
 
