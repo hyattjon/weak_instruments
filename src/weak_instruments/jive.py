@@ -1,4 +1,66 @@
 # JIVE (and JIVE-related estimators---there are a lot of these in the literature)
+import numpy as np
+
+
+
+
+
+def jive1_estimator(Y: np.ndarray, X: np.ndarray, Z: np.ndarray) -> np.ndarray:
+    """
+    Calculates the JIVE1 estimator using a two-pass approach.
+
+    Args:
+        Y (np.ndarray): A 1-D numpy array of the dependent variable (N x 1).
+        X (np.ndarray): A 2-D numpy array of the endogenous regressors (N x L).
+        Z (np.ndarray): A 2-D numpy array of the instruments (N x K), where K > L.
+
+    Returns:
+        np.ndarray: A 1-D numpy array of the JIVE1 estimates (L x 1).
+    """
+    # First Pass
+    ZT_Z = Z.T @ Z
+    ZT_Z_inv = np.linalg.inv(ZT_Z)
+    pi_hat = ZT_Z_inv @ Z.T @ X
+    X_hat = Z @ pi_hat
+    H = Z @ ZT_Z_inv @ Z.T
+    h = np.diag(H)
+
+    # Second Pass: Construct the X_jive1 matrix
+    N = Y.shape
+    L = X.shape[1]
+    X_jive1 = np.zeros_like(X, dtype=float)
+
+    for i in range(N):
+        numerator = X_hat[i, :] - h[i] * X[i, :]
+        denominator = 1 - h[i]
+        X_jive1[i, :] = numerator / denominator
+
+    # Second Stage: IV estimation using X_jive1 as the instrument for X
+    X_jive1_T_X = X_jive1.T @ X
+    X_jive1_T_Y = X_jive1.T @ Y
+
+    try:
+        beta_jive1 = np.linalg.inv(X_jive1_T_X) @ X_jive1_T_Y
+    except np.linalg.LinAlgError:
+        print("Singular matrix encountered during the second stage of JIVE1 estimation.")
+        return np.full(L, np.nan)
+
+    return beta_jive1
+
+
+
+def JIVE2(X, y):
+    """Implement the JIVE2 estimator.
+    
+    Example:
+    JIVE2(X, y)"""
+    
+    return 1
+
+
+
+
+
 
 
 if __name__=="__main__":

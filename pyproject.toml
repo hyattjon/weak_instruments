@@ -16,9 +16,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+
 license = "MIT"
 license-files = ["LICENSE*"]
 
 [project.urls]
 Homepage = "https://github.com/pypa/weak_instruments"
 Issues = "https://github.com/pypa/weak_instruments/issues"
+
+# Dependencies numpy
