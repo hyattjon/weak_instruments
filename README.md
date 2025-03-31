@@ -1,6 +1,6 @@
 # Solutions to Weak Instruments
 
-## JIVE
+## JIVE1 and JIVE2 estimates based on Angrist, Imbens, and Krueger
 
 
 
