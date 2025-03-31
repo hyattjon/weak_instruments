@@ -1,7 +1,7 @@
 # Solutions to Weak Instruments
 
-## JIVE
-Implementation of JIVE1 and JIVE2 from Angrist 1999
+## JIVE1 and JIVE2 estimates based on Angrist, Imbens, and Krueger
+
 
 
 
