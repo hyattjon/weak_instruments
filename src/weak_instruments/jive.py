@@ -14,8 +14,7 @@ def jive1_estimator(Y: np.ndarray, X: np.ndarray, Z: np.ndarray) -> np.ndarray:
         np.ndarray: A 1-D numpy array of the JIVE1 estimates (L x 1).
     """
     # First Pass
-    ZT_Z = Z.T @ Z
-    ZT_Z_inv = np.linalg.inv(ZT_Z)
+    ZT_Z_inv = np.linalg.inv(Z.T @ Z)
     pi_hat = ZT_Z_inv @ Z.T @ X
     X_hat = Z @ pi_hat
     H = Z @ ZT_Z_inv @ Z.T
@@ -87,7 +86,7 @@ def JIVE1(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray:
 
     return beta_est
 
-def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray, const:bool  = False) -> np.ndarray:
+def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray:
     """
     JIVE1 algorithm.
     Parameters
@@ -103,28 +102,40 @@ def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray, const:bool  = False) -> np.
     np.ndarray
         The estimated coefficients.
     """
+    # Check if X is a one-dimensional array
+    if X.ndim != 1:
+        raise ValueError("X must be a one-dimensional array.")
+    # Check if Y is a one-dimensional array
+    if Y.ndim != 1:
+        raise ValueError("Y must be a one-dimensional array.")
+    # Check if Z is at least a one-dimensional array
+    if Z.ndim < 1:
+        raise ValueError("Z must be at least a one-dimensional array.")
+    # Check if the number of rows in X, Y, and Z are the same
+    if X.shape[0] != Y.shape[0] or X.shape[0] != Z.shape[0]:
+        raise ValueError("The number of rows in X, Y, and Z must be the same.")
 
+
+    # Create the projection matrix P
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
-    # Cleaning up we need to add the column of ones to the data matrix
-    # Maybe not
+    # Initialize the top and bottom of the fraction from the formula
     top =0
     bottom = 0
-
+    # Initialize the outcome vector of beta estimates
+    beta_vec = np.zeros(X.shape[1])
+    # Loop through all rows
     for i in range(X.shape[0]):
+        # Loop through all rows not including the ith row
         for j in range(X.shape[0]):
+            # Check to see if the ith row is not equal to the jth row
             if i != j:
+                # Calculate the top and bottom of the fraction from the formula
                 top = P[i,j]*X[i]*Y[j] # ith row, jth column
-                bottom = P[i,j]*X[i]*X[j]
-
-    # First pass, run n regressions of X in Z leaving out the ith row
-
-    # Second pass, 
-
-    # Construct the beta estimates from the formula ::
-    
-    beta_est = 1
-
-    return beta_est
+                bottom = P[i,j]*X[i]*X[j] # ith row, jth column
+                # Calculate the beta estimate for the ith row
+                beta_vec[i] = top/bottom
+    # Return the vector of beta estimates
+    return beta_vec
 
 
 if __name__=="__main__":
