@@ -1,10 +1,6 @@
 # JIVE (and JIVE-related estimators---there are a lot of these in the literature)
 import numpy as np
 
-
-
-
-
 def jive1_estimator(Y: np.ndarray, X: np.ndarray, Z: np.ndarray) -> np.ndarray:
     """
     Calculates the JIVE1 estimator using a two-pass approach.
