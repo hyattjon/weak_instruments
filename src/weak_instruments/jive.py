@@ -1,9 +1,9 @@
 # JIVE (and JIVE-related estimators---there are a lot of these in the literature)
 import numpy as np
 
-def jive1_estimator(Y: np.ndarray, X: np.ndarray, Z: np.ndarray) -> np.ndarray:
+def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.ndarray:
     """
-    Calculates the JIVE1 estimator using a two-pass approach.
+    Calculates the JIVE1 estimator using a two-pass approach reccommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
     Args:
         Y (np.ndarray): A 1-D numpy array of the dependent variable (N x 1).
@@ -13,32 +13,44 @@ def jive1_estimator(Y: np.ndarray, X: np.ndarray, Z: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: A 1-D numpy array of the JIVE1 estimates (L x 1).
     """
+
+    # Check if Y is a one-dimensional array
+    if Y.ndim != 1:
+        raise ValueError("Y must be a one-dimensional array.")
+    # Check if Z is at least a one-dimensional array
+    if Z.ndim < 1:
+        raise ValueError("Z must be at least a one-dimensional array.")
+    # Check that Y and X and Z have N columns. Base off of Y.shape[0]
+    N = Y.shape[0]
+    if X.shape[0] != N:
+        raise ValueError("X and Y must have the same number of rows.")
+    if Z.shape[0] != N:
+        raise ValueError("Z and Y must have the same number of rows.")
+    if Z.shape[1] <= X.shape[1]:
+        print(f"Normally this estimator is used when Z has more columns than X. In this case Z has {Z.shape[1]} columns and X has {X.shape[1]} columns.")
+
+    if talk:
+        print(f"Y has {Y.shape[0]} rows and {Y.shape[1]} columns.\n")
+        print(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
+        print(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
+
+
+    ### I need this double checked to ensure accuracy. I'm not confident that the matrix multiplication will give us a scalar. i.e. the sizes of the matrices with one row subtracted might be messed up.
     # First Pass
-    ZT_Z_inv = np.linalg.inv(Z.T @ Z)
-    pi_hat = ZT_Z_inv @ Z.T @ X
-    X_hat = Z @ pi_hat
-    H = Z @ ZT_Z_inv @ Z.T
-    h = np.diag(H)
+    # pi[i] = np.linalg.inv(z[i].T @ z[i]) @ (z[i].T @ X[i])
+    Z_c = Z.copy()
+    X_c = X.copy()
+    Z_tilde = np.zeros(Z.shape[0])
+    for i in range(Z.shape[0]):
+        Z_i = np.delete(Z_c, i, axis=0)
+        X_i = np.delete(X_c, i, axis=0)
+        Z_tilde[i] = (Z_i @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X - Z_i @ X_i)) / (1- Z_i @ (np.linalg.inv(Z.T @ Z)) @ Z_i.T)
 
     # Second Pass: Construct the X_jive1 matrix
-    N = Y.shape
-    L = X.shape[1]
-    X_jive1 = np.zeros_like(X, dtype=float)
-
-    for i in range(N):
-        numerator = X_hat[i, :] - h[i] * X[i, :]
-        denominator = 1 - h[i]
-        X_jive1[i, :] = numerator / denominator
+    # Need some help here 
 
     # Second Stage: IV estimation using X_jive1 as the instrument for X
-    X_jive1_T_X = X_jive1.T @ X
-    X_jive1_T_Y = X_jive1.T @ Y
-
-    try:
-        beta_jive1 = np.linalg.inv(X_jive1_T_X) @ X_jive1_T_Y
-    except np.linalg.LinAlgError:
-        print("Singular matrix encountered during the second stage of JIVE1 estimation.")
-        return np.full(L, np.nan)
+    beta_jive1 = 1
 
     return beta_jive1
 
@@ -52,39 +64,6 @@ def JIVE2(X, y):
     
     return 1
 
-
-
-
-
-
-import numpy as np 
- 
-def JIVE1(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray:
-    """
-    JIVE1 algorithm.
-    Parameters
-    ----------
-    X : np.ndarray
-        The control data matrix.
-    Y : np.ndarray
-        The outcome vector.
-    n_components : int
-        The number of components to extract.
-    Returns
-    -------
-    np.ndarray
-        The estimated coefficients.
-    """
-    
-    # First pass, run n regressions of X in Z leaving out the ith row
-
-    # Second pass, 
-
-    # Construct the beta estimates from the formula ::
-
-    beta_est = 1
-
-    return beta_est
 
 def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray:
     """
