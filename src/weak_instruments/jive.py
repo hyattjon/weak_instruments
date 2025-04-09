@@ -42,9 +42,6 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
     for i in range(Z.shape[0]):
         Z_j1[i] = (Z[i] @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X - Z[i].T @ X[i])) / (1- Z[i] @ (np.linalg.inv(Z.T @ Z)) @ Z[i].T)
 
-    # Second Pass: Construct the X_jive1 matrix
-    # Need some help here 
-
     # Second Stage: IV estimation using X_jive1 as the instrument for X
     p_jive1 = np.dot(Z_j1, np.dot(np.linalg.inv(Z_j1.T @ Z_j1), Z_j1.T))
     beta_jive1 = np.linalg.inv(X.T @ p_jive1 @ X) @ X.T @ p_jive1 @ Y
@@ -107,16 +104,8 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
 
 
 
-def JIVE2(X, y):
-    """Implement the JIVE2 estimator.
-    
-    Example:
-    JIVE2(X, y)"""
-    
-    return 1
 
-
-def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray:
+def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray: # This one comes from Mikusheva and Sun 
     """
     JIVE1 algorithm.
     Parameters
