@@ -36,17 +36,15 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
 
 
     ### I need this double checked to ensure accuracy. I'm not confident that the matrix multiplication will give us a scalar. i.e. the sizes of the matrices with one row subtracted might be messed up.
-    # First Pass
-    # pi[i] = np.linalg.inv(z[i].T @ z[i]) @ (z[i].T @ X[i])
-    Z_j1 = np.zeros((Z.shape[0], X.shape[1]))
-    for i in range(Z.shape[0]):
-        Z_j1[i] = (Z[i] @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X - Z[i].T @ X[i])) / (1- Z[i] @ (np.linalg.inv(Z.T @ Z)) @ Z[i].T)
+    fit = np.dot(np.dot(np.dot(Z ,  np.linalg.inv(np.dot(Z.T, Z))) , Z.T) , X)
+    leverage = (np.diag(np.dot(np.dot(Z , np.linalg.inv(np.dot(Z.T , Z))) , Z.T)))
+    leverage = leverage.reshape(-1, 1)
 
-    # Second Stage: IV estimation using X_jive1 as the instrument for X
-    p_jive1 = np.dot(Z_j1, np.dot(np.linalg.inv(Z_j1.T @ Z_j1), Z_j1.T))
-    beta_jive1 = np.linalg.inv(X.T @ p_jive1 @ X) @ X.T @ p_jive1 @ Y
+    X_jive = (fit - leverage * X)/(1-leverage) 
+    beta_jive1 = np.linalg.inv(X_jive.T @ X) @ X_jive.T @ Y 
 
-    print("JIVE1 Estimates:\n", beta_jive1)
+    print("JIVE2 Estimates:\n", beta_jive1)
+
     return beta_jive1
 
 
@@ -85,77 +83,14 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
 
 
     ### I need this double checked to ensure accuracy. I'm not confident that the matrix multiplication will give us a scalar. i.e. the sizes of the matrices with one row subtracted might be messed up.
-    # First Pass
-    # pi[i] = np.linalg.inv(z[i].T @ z[i]) @ (z[i].T @ X[i])
-    Z_j2 = np.zeros((Z.shape[0], X.shape[1]))
-    for i in range(Z.shape[0]):
-        Z_j2[i] = (Z[i] @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X - Z[i].T @ X[i])) / (1- (1/N))
+    fit = np.dot(np.dot(np.dot(Z ,  np.linalg.inv(np.dot(Z.T, Z))) , Z.T) , X)
+    leverage = (np.diag(np.dot(np.dot(Z , np.linalg.inv(np.dot(Z.T , Z))) , Z.T)))
+    leverage = leverage.reshape(-1, 1)
 
-    # Second Pass: Construct the X_jive1 matrix
-    # Need some help here 
+    X_jive2 = (fit - leverage * X)/(1-(1/N)) 
+    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y 
 
-    # Second Stage: IV estimation using X_jive1 as the instrument for X
-    p_jive2 = np.dot(Z_j2, np.dot(np.linalg.inv(Z_j2.T @ Z_j2), Z_j2.T))
-    beta_jive2 = np.linalg.inv(X.T @ p_jive2 @ X) @ X.T @ p_jive2 @ Y
+    print("JIVE2 Estimates:\n", beta_jive2)
 
-    print("JIVE1 Estimates:\n", beta_jive2)
     return beta_jive2
 
-
-
-
-
-def JIVE2(X:np.ndarray, Y:np.ndarray, Z: np.ndarray) -> np.ndarray: # This one comes from Mikusheva and Sun 
-    """
-    JIVE1 algorithm.
-    Parameters
-    ----------
-    X : np.ndarray
-        The control data matrix. X is a one-dimensional array. Single endogenous variable.
-    Y : np.ndarray
-        The outcome vector.
-    Z : np.ndarray
-        The instrument matrix. N x K dimensional matrix.
-    Returns
-    -------
-    np.ndarray
-        The estimated coefficients.
-    """
-    # Check if X is a one-dimensional array
-    if X.ndim != 1:
-        raise ValueError("X must be a one-dimensional array.")
-    # Check if Y is a one-dimensional array
-    if Y.ndim != 1:
-        raise ValueError("Y must be a one-dimensional array.")
-    # Check if Z is at least a one-dimensional array
-    if Z.ndim < 1:
-        raise ValueError("Z must be at least a one-dimensional array.")
-    # Check if the number of rows in X, Y, and Z are the same
-    if X.shape[0] != Y.shape[0] or X.shape[0] != Z.shape[0]:
-        raise ValueError("The number of rows in X, Y, and Z must be the same.")
-
-
-    # Create the projection matrix P
-    P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
-    # Initialize the top and bottom of the fraction from the formula
-    top =0
-    bottom = 0
-    # Initialize the outcome vector of beta estimates
-    beta_vec = np.zeros(X.shape[1])
-    # Loop through all rows
-    for i in range(X.shape[0]):
-        # Loop through all rows not including the ith row
-        for j in range(X.shape[0]):
-            # Check to see if the ith row is not equal to the jth row
-            if i != j:
-                # Calculate the top and bottom of the fraction from the formula
-                top = P[i,j]*X[i]*Y[j] # ith row, jth column
-                bottom = P[i,j]*X[i]*X[j] # ith row, jth column
-                # Calculate the beta estimate for the ith row
-                beta_vec[i] = top/bottom
-    # Return the vector of beta estimates
-    return beta_vec
-
-
-if __name__=="__main__":
-    pass
