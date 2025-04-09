@@ -9,6 +9,7 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
         Y (np.ndarray): A 1-D numpy array of the dependent variable (N x 1).
         X (np.ndarray): A 2-D numpy array of the endogenous regressors (N x L).
         Z (np.ndarray): A 2-D numpy array of the instruments (N x K), where K > L.
+        talk (bool) : If True prints comments along the way for clearer explanation and verification.
 
     Returns:
         np.ndarray: A 1-D numpy array of the JIVE1 estimates (L x 1).
@@ -20,6 +21,7 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
     # Check if Z is at least a one-dimensional array
     if Z.ndim < 1:
         raise ValueError("Z must be at least a one-dimensional array.")
+    
     # Check that Y and X and Z have N columns. Base off of Y.shape[0]
     N = Y.shape[0]
     if X.shape[0] != N:
@@ -34,13 +36,24 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
         print(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
         print(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
-
-    ### I need this double checked to ensure accuracy. I'm not confident that the matrix multiplication will give us a scalar. i.e. the sizes of the matrices with one row subtracted might be messed up.
+    # First pass to get fitted values and leverage
     fit = np.dot(np.dot(np.dot(Z ,  np.linalg.inv(np.dot(Z.T, Z))) , Z.T) , X)
+    if talk:
+        print(f'Fitted values obtained... \n')
+    # Get the main diagonal from the projection matrix
     leverage = (np.diag(np.dot(np.dot(Z , np.linalg.inv(np.dot(Z.T , Z))) , Z.T)))
+
+    if talk:
+        print(f'Leverage obtained... \n')
+    # Reshape to get an Nx1 vector
     leverage = leverage.reshape(-1, 1)
 
+    # Second pass to remove the ith row for unbiased estimates
     X_jive = (fit - leverage * X)/(1-leverage) 
+    if talk:
+        print(f'Second pass complete...')
+
+    # Here is the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive.T @ X) @ X_jive.T @ Y 
 
     print("JIVE2 Estimates:\n", beta_jive1)
@@ -56,6 +69,7 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
         Y (np.ndarray): A 1-D numpy array of the dependent variable (N x 1).
         X (np.ndarray): A 2-D numpy array of the endogenous regressors (N x L).
         Z (np.ndarray): A 2-D numpy array of the instruments (N x K), where K > L.
+        talk (bool) : If True prints comments along the way for clearer explanation and verification.
 
     Returns:
         np.ndarray: A 1-D numpy array of the JIVE2 estimates (L x 1).
@@ -82,12 +96,26 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
         print(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
 
-    ### I need this double checked to ensure accuracy. I'm not confident that the matrix multiplication will give us a scalar. i.e. the sizes of the matrices with one row subtracted might be messed up.
+    ### First pass to get fitted values and leverage ###
+    # Getting fitted values
     fit = np.dot(np.dot(np.dot(Z ,  np.linalg.inv(np.dot(Z.T, Z))) , Z.T) , X)
+    if talk:
+        print(f'Obtained fitted values... \n')
+    # Getting leverage
     leverage = (np.diag(np.dot(np.dot(Z , np.linalg.inv(np.dot(Z.T , Z))) , Z.T)))
+    if talk:
+        print(f'Obtained Leverage...')
+    # Making leverage an Nx1 vector
     leverage = leverage.reshape(-1, 1)
 
+    if talk:
+        print(f'First pass complete...')
+
+
+    ### Second pass to remove ith row and reduce bias ###
     X_jive2 = (fit - leverage * X)/(1-(1/N)) 
+    if talk:
+        print(f'Second pass complete... /n')
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y 
 
     print("JIVE2 Estimates:\n", beta_jive2)
