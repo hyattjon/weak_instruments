@@ -1,5 +1,6 @@
 # JIVE (and JIVE-related estimators---there are a lot of these in the literature)
 import numpy as np
+from scipy.stats import t
 
 def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.ndarray:
     """
@@ -56,7 +57,32 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
     # Here is the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive.T @ X) @ X_jive.T @ Y 
 
+    #Now, lets get standard errors and do a t-test. We follow Poi (2006).
+    midsum = 0
+    for i in range(N):
+        midsum += (Y[i] - X[i] @ beta_jive1)**2 * np.outer(X_jive[i], X_jive[i])
+    robust_v = np.linalg.inv(X_jive.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive)
+
+    #Lets do a hypothesis test that B1=0
+
+    #First, get degrees of freedom
+    dof = N - X.shape[1]
+    #Get the t-stat
+    t_stat = (beta_jive1[1])/((robust_v[1,1])**.5)
+    #Get the p-val from t-dist w specified degrees of freedom
+    pval = 2 * (1 - t.cdf(np.abs(t_stat), df=dof))
+    #Get the critical value (95% level)
+    t_crit = t.ppf(0.975, df=dof)
+    #Confidence interval
+    ci_lower = beta_jive1[1] - t_crit * (robust_v[1,1])**.5
+    ci_upper = beta_jive1[1] + t_crit * (robust_v[1,1])**.5
+
+    ci = (ci_lower, ci_upper)
+
+
     print("JIVE2 Estimates:\n", beta_jive1)
+    print("B1 se:\n", (robust_v[1,1])**.5)
+    print("B1 95% CI:", ci)
 
     return beta_jive1
 
@@ -118,7 +144,32 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
         print(f'Second pass complete... /n')
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y 
 
+    #Now, lets get standard errors and do a t-test. We follow Poi (2006).
+    midsum = 0
+    for i in range(N):
+        midsum += (Y[i] - X[i] @ beta_jive2)**2 * np.outer(X_jive2[i], X_jive2[i])
+    robust_v = np.linalg.inv(X_jive2.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive2)
+
+    #Lets do a hypothesis test that B1=0
+
+    #First, get degrees of freedom
+    dof = N - X.shape[1]
+    #Get the t-stat
+    t_stat = (beta_jive2[1])/((robust_v[1,1])**.5)
+    #Get the p-val from t-dist w specified degrees of freedom
+    pval = 2 * (1 - t.cdf(np.abs(t_stat), df=dof))
+    #Get the critical value (95% level)
+    t_crit = t.ppf(0.975, df=dof)
+    #Confidence interval
+    ci_lower = beta_jive2[1] - t_crit * (robust_v[1,1])**.5
+    ci_upper = beta_jive2[1] + t_crit * (robust_v[1,1])**.5
+
+    ci = (ci_lower, ci_upper)
+
+
     print("JIVE2 Estimates:\n", beta_jive2)
+    print("B1 se:\n", (robust_v[1,1])**.5)
+    print("B1 95% CI:", ci)
 
     return beta_jive2
 
