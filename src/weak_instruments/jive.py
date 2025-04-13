@@ -80,9 +80,39 @@ def JIVE1(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
     ci = (ci_lower, ci_upper)
 
 
+    #WITH ONE ENDOGENOUS VARIABLE! Let's also get and report some relevant things from the first stage:
+    #First, the first stage R2:
+    x_end = X[:,1]
+    xfit = Z@np.linalg.inv(Z.T @ Z) @ Z.T @ x_end
+    xbar = np.mean(x_end)
+
+    fs_r2 = 1 - np.sum((x_end - xfit) ** 2) / np.sum((x_end - xbar) ** 2)  # R²
+
+    #Now, lets get the first stage F-stat
+    q_fs = Z.shape[1]
+    e_fs = x_end - xfit
+    F_fs = ((np.sum((xfit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
+
+
+
+    #Get the r2 for the model:
+    yfit = X @ np.linalg.inv(X_jive.T @ X) @ X_jive.T @ Y 
+    ybar = np.mean(y)
+    r2 = 1 - np.sum((y-yfit)**2) / np.sum((y-ybar)**2)
+
+    #Overall F-stat for the model:
+    q = X.shape[1]
+    e = y-yfit
+    F = ((np.sum((yfit-ybar)**2)) / (q-1)) / ((e.T @ e)/(N-q))
+    
+
     print("JIVE2 Estimates:\n", beta_jive1)
     print("B1 se:\n", (robust_v[1,1])**.5)
     print("B1 95% CI:", ci)
+    print("First Stage R2:", fs_r2)
+    print(f"First Stage F({q_fs - 1}, {N - q_fs}):", F_fs)
+    print("R2:", r2)
+    print(f"F({q - 1}, {N - q}):", F)
 
     return beta_jive1
 
@@ -173,3 +203,16 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
 
     return beta_jive2
 
+
+data = np.loadtxt('jive_data.csv', delimiter=',', skiprows=1)
+y = data[:, 1]
+x = data[:, 0]
+z = data[:, 2]
+
+ones = np.ones((data.shape[0], 1))
+
+X = np.hstack((ones, x[:, np.newaxis]))
+Z = np.hstack((ones, z[:, np.newaxis]))
+
+
+JIVE1(y,X,Z)
