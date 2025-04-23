@@ -1,10 +1,51 @@
 import numpy as np
 from scipy.stats import t
+import logging
+
+# Set up the logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Default logging level
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(message)s')  # Simple format for teaching purposes
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 
-def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnames=None) -> np.ndarray:
+class HFULResult:
+    def __init__(self, betas, se_list, tstat_list, pval_list, ci_list):
+        self.betas = betas
+        self.se_list = se_list
+        self.tstat_list = tstat_list
+        self.pval_list = pval_list
+        self.ci_list = ci_list
+
+    def __getitem__(self, key: str):
+        if key == 'betas':
+            return self.betas
+        elif key == 'se_list':
+            return self.se_list
+        elif key == 'tstat_list':
+            return self.tstat_list
+        elif key == 'pval_list':
+            return self.pval_list
+        elif key == 'ci_list':
+            return self.ci_list
+        else:
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'betas', 'se_list', 'tstat_list', 'pval_list', or 'ci_list'.")
+
+    def __repr__(self):
+        return f"HFULResult(betas={self.betas}, se_list={self.se_list}, tstat_list={self.tstat_list}, pval_list={self.pval_list}, ci_list={self.ci_list})"
+
+
+def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnames=None) -> HFULResult:
     N = Y.shape[0]
     Xbar = np.hstack([Y, X])
+
+    # Adjust logging level based on the `talk` parameter
+    if talk:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
 
     # Projection matrix and its diagonal
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
@@ -34,8 +75,7 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
     Z_tild = Z @ np.linalg.pinv(Z.T @ Z)
     f_sum = 0
     for i in range(N):
-        #f_sum += (np.outer(X_dot[i], X_dot[i]) - diags[i] * np.outer(X_hat[i],  X_dot[i]) - diags[i] * np.outer(X_dot[i], X_hat[i]))*eps_hat[i]**2
-        f_sum += (np.outer(X_dot[i], X_dot[i]) - diags[i] * np.outer(X_hat[i], X_dot[i]) - diags[i] * np.outer(X_dot[i], X_hat[i]))*eps_hat[i]**2
+        f_sum += (np.outer(X_dot[i], X_dot[i]) - diags[i] * np.outer(X_hat[i], X_dot[i]) - diags[i] * np.outer(X_dot[i], X_hat[i])) * eps_hat[i]**2
 
     sig_sum1 = 0
     # Precompute xi_ei for all i
@@ -45,14 +85,14 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
         for j in range(N):
             zij = np.dot(Z_tild[i], Z_tild[j])  # scalar
             sig_sum1 += np.outer(xi_ei[i], xi_ei[j]) * zij
-    Sig_hat = f_sum + sig_sum1 
-
+    Sig_hat = f_sum + sig_sum1
 
     V_hat = np.linalg.inv(H_hat) @ Sig_hat @ np.linalg.inv(H_hat)
 
     dof = N - X.shape[1]
     t_crit = t.ppf(0.975, df=dof)
-    # Store results in lists (or dicts, if you prefer named access)
+
+    # Store results in lists
     se_list = []
     tstat_list = []
     pval_list = []
@@ -71,16 +111,15 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
         ci_list.append((ci_lower_i, ci_upper_i))
 
     if talk:
-        print("HFUL Betas:", betas.flatten())
-        print("HFUL Var (original):", V_hat)
+        logger.info("HFUL Betas:\n%s", betas.flatten())
+        logger.info("HFUL Var (original):\n%s", V_hat)
         for i in range(X.shape[1]):
             label = colnames[i] if colnames is not None else f"beta_{i}"
-            print(f"\nCoefficient: {label}")
-            print(f"  Estimate: {betas[i][0]}")
-            print(f"  SE: {se_list[i]}")
-            print(f"  t-stat: {tstat_list[i]}")
-            print(f"  p-value: {pval_list[i]}")
-            print(f"  95% CI: {ci_list[i]}")
+            logger.info("\nCoefficient: %s", label)
+            logger.info("  Estimate: %f", betas[i][0])
+            logger.info("  SE: %f", se_list[i])
+            logger.info("  t-stat: %f", tstat_list[i])
+            logger.info("  p-value: %f", pval_list[i])
+            logger.info("  95%% CI: (%f, %f)", ci_list[i][0], ci_list[i][1])
 
-    
-    return betas
+    return HFULResult(betas=betas, se_list=se_list, tstat_list=tstat_list, pval_list=pval_list, ci_list=ci_list)

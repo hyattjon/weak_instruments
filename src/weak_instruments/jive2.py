@@ -10,7 +10,27 @@ formatter = logging.Formatter('%(message)s')  # Simple format for teaching purpo
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> NDArray[np.float64]:
+class JIVE2Result:
+    def __init__(self, beta: NDArray[np.float64], leverage: NDArray[np.float64], fitted_values: NDArray[np.float64]):
+        self.beta = beta
+        self.leverage = leverage
+        self.fitted_values = fitted_values
+
+    def __getitem__(self, key: str):
+        if key == 'beta':
+            return self.beta
+        elif key == 'leverage':
+            return self.leverage
+        elif key == 'fitted_values':
+            return self.fitted_values
+        else:
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', or 'fitted_values'.")
+
+    def __repr__(self):
+        return f"JIVE2Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values})"
+
+
+def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE2Result:
     """
     Calculates the JIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
@@ -21,7 +41,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         talk (bool): If True, provides detailed output for teaching purposes. Default is False.
 
     Returns:
-        NDArray[np.float64]: A 1-D numpy array of the JIVE2 estimates (L x 1).
+        JIVE2Result: A custom result object containing the JIVE2 estimates, leverage values, and fitted values.
     """
     # Adjust logging level based on the `talk` parameter
     if talk:
@@ -63,12 +83,12 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"First pass complete.\n")
 
     # Second pass to remove ith row and reduce bias
-    X_jive2 = (fit - leverage * X) / (1 - (1 / N))
+    X_jive2 = (fit - leverage * X) / (1 - (1 / P.shape[0]))
     logger.debug(f"Second pass complete.\n")
 
     # Calculate the JIVE2 estimates
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
     logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
 
-    return beta_jive2
+    return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
 

@@ -1,5 +1,7 @@
 import numpy as np
 
+from jive1 import *
+
 #Pick a vector length:
 n = 1000
 
@@ -25,7 +27,7 @@ x = np.dot(Z,α) + .2*e1
 X = np.column_stack((column_of_ones, x))
 
 #Outcome vector:
-y = np.dot(x,β) + ε
+y = np.dot(X,β) + ε # I changed this to capital X because I was getting shape errors
 
 #OLS benchmark:
 bhat_ols = np.dot(np.linalg.inv(np.dot(X.T,X)), np.dot(X.T, y))
@@ -42,3 +44,7 @@ bhat_2sls = np.dot(first, second)
 #Compare them:
 print("OLS:", bhat_ols[1])
 print("2SLS", bhat_2sls[1])
+
+jive1 = JIVE1(y,X,Z)
+
+print(jive1['beta'])

@@ -13,10 +13,24 @@ formatter = logging.Formatter('%(message)s')  # Simple format for teaching purpo
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-class JIVE1Result(NamedTuple):
-    beta: NDArray[np.float64]
-    leverage: NDArray[np.float64]
-    fitted_values: NDArray[np.float64]
+class JIVE1Result:
+    def __init__(self, beta: NDArray[np.float64], leverage: NDArray[np.float64], fitted_values: NDArray[np.float64]):
+        self.beta = beta
+        self.leverage = leverage
+        self.fitted_values = fitted_values
+
+    def __getitem__(self, key: str):
+        if key == 'beta':
+            return self.beta
+        elif key == 'leverage':
+            return self.leverage
+        elif key == 'fitted_values':
+            return self.fitted_values
+        else:
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', or 'fitted_values'.")
+
+    def __repr__(self):
+        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values})"
 
 def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE1Result:
     """
@@ -64,7 +78,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     # Get the main diagonal from the projection matrix
     leverage = np.diag(P)
-    if np.any(leverage >= 1):
+    if np.any(leverage >= 1): # Jacob: Not sure if leverage will ever be close to 1? Maybe if there is only one obs? Not sure if we even need this but it might help with edge cases??
         raise ValueError("Leverage values must be strictly less than 1 to avoid division by zero.")
     logger.debug(f"Leverage values obtained.\n")
 
@@ -82,3 +96,13 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit)
 
 
+
+
+### Future thoughts ###
+"""
+
+
+
+
+
+"""

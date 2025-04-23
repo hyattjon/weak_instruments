@@ -1,7 +1,9 @@
 import numpy as np
-
+from jive1 import *
+from jive2 import *
+"""
 def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.ndarray:
-    """
+    
     Calculates the JIVE2 estimator using a two-pass approach reccommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
     Args:
@@ -11,7 +13,7 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
 
     Returns:
         np.ndarray: A 1-D numpy array of the JIVE2 estimates (L x 1).
-    """
+    
 
     # Check if Y is a one-dimensional array
     if Y.ndim != 1:
@@ -51,6 +53,8 @@ def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.
     print("JIVE1 Estimates:\n", beta_jive2)
     return beta_jive2
 
+    """
+
 #Pick a vector length:
 n = 1000
 
@@ -87,8 +91,11 @@ proj_x = np.dot(pz, X)
 first = np.linalg.inv(np.dot(proj_x.T, X))
 second = np.dot(proj_x.T, Y)
 bhat_2sls = np.dot(first, second)
-JIVE2(Y,X,Z)
+jive1 = JIVE1(Y,X,Z)
+jive2 = JIVE2(Y,X,Z)
 
 #Compare them:
 print("OLS:", bhat_ols[1])
-print("2SLS", bhat_2sls[1])
+print("2SLS:", bhat_2sls[1])
+print("Jive 1:", jive1['beta'])
+print("Jive 2:",jive2['beta'])
