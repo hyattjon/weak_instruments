@@ -1,6 +1,7 @@
 import numpy as np
 from jive1 import *
 from jive2 import *
+import pandas as pd
 """
 def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.ndarray:
     
@@ -93,6 +94,20 @@ second = np.dot(proj_x.T, Y)
 bhat_2sls = np.dot(first, second)
 jive1 = JIVE1(Y,X,Z)
 jive2 = JIVE2(Y,X,Z)
+
+# Combine matrices into a single DataFrame
+df = pd.DataFrame({
+    "Y": Y,  # Outcome vector
+    **{f"X{i}": X[:, i] for i in range(X.shape[1])},  # Endogenous variables
+    **{f"Z{i}": Z[:, i] for i in range(Z.shape[1])}   # Instrumental variables
+})
+
+# Save the DataFrame to a CSV file
+df.to_csv('data.csv', index=False)
+
+# Print the DataFrame to verify
+#print(df)
+
 
 #Compare them:
 print("OLS:", bhat_ols[1])

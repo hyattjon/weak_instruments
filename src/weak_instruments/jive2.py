@@ -74,7 +74,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"Fitted values obtained.\n")
 
     leverage = np.diag(P)
-    if np.any(leverage >= 1):
+    if np.any(leverage >= 1): # Add comment about high leverage as well 
         raise ValueError("Leverage values must be strictly less than 1 to avoid division by zero.")
     logger.debug(f"Leverage values obtained.\n")
 
@@ -83,11 +83,13 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"First pass complete.\n")
 
     # Second pass to remove ith row and reduce bias
-    X_jive2 = (fit - leverage * X) / (1 - (1 / P.shape[0]))
+    print((1/N))
+    X_jive2 = (fit - leverage * X) / (1 - (1 / N))
     logger.debug(f"Second pass complete.\n")
 
+
     # Calculate the JIVE2 estimates
-    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
+    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y 
     logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
