@@ -84,12 +84,16 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     # Second pass to remove ith row and reduce bias
     print((1/N))
-    X_jive2 = (fit - leverage * X) / (1 - (1 / N))
+    X_jive2 = (fit - (leverage * X)) / (1 - (1 / N))
+    print(fit)
+    print(leverage)
+    print(leverage*X)
+    print(X)
     logger.debug(f"Second pass complete.\n")
 
 
     # Calculate the JIVE2 estimates
-    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y 
+    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ (X_jive2.T @ Y) 
     logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
