@@ -1,6 +1,7 @@
 import numpy as np
 import logging
 from numpy.typing import NDArray
+from scipy.stats import t
 
 # Set up the logger
 logger = logging.getLogger(__name__)
@@ -100,6 +101,49 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
     logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
 
-    print("UJIVE2 Estimates:", beta_jive2)
+    #Now, lets get standard errors and do a t-test. We follow Poi (2006).
+    midsum = 0
+    for i in range(N):
+        midsum += (Y[i] - X[i] @ beta_jive2)**2 * np.outer(X_jive2[i], X_jive2[i])
+    robust_v = np.linalg.inv(X_jive2.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive2)
+
+
+    #Lets do a hypothesis test that B1=0
+    pvals = []
+    tstats = []
+    cis = []
+
+    K = X.shape[1]
+    dof = N - K
+    for i in range(K):
+        t_stat_i = (beta_jive2[i])/((robust_v[i,i])**.5)
+        pval_i = 2 * (1 - t.cdf(np.abs(t_stat_i), df=dof))
+        t_crit_i = t.ppf(0.975, df=dof)
+
+        ci_lower = beta_jive2[i] - t_crit_i * (robust_v[i,i])**.5
+        ci_upper = beta_jive2[i] + t_crit_i * (robust_v[i,i])**.5
+        ci_i = (ci_lower, ci_upper)
+        tstats.append(t_stat_i)
+        pvals.append(pval_i)
+        cis.append(ci_i)  
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
+
+
+data = np.loadtxt('jive_many_test.csv', delimiter=',', skiprows=1)
+z1 = data[:, 0].reshape(-1,1)
+z2 = data[:, 1].reshape(-1,1)
+z3 = data[:, 2].reshape(-1,1)
+x1 = data[:, 3].reshape(-1,1)
+x2 = data[:, 4].reshape(-1,1)
+y = data[:, 5]
+
+X = np.hstack((x1,x2))
+Z = np.hstack((z1,z2,z3))
+
+print(X.shape)
+print(Z.shape)
+print(y.shape)
+
+
+JIVE2(y,X,Z)
