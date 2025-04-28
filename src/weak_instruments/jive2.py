@@ -82,7 +82,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     leverage = leverage.reshape(-1, 1)
     logger.debug(f"First pass complete.\n")
 
-    # Second pass to remove ith row and reduce bias
+    # Second pass to remove ith row and reduce bias 
     X_jive2 = (fit - (leverage * X)) / (1 - (1 / N))
     #print(fit)
     #print(leverage)
