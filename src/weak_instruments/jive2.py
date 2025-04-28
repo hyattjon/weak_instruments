@@ -103,23 +103,3 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     print("UJIVE2 Estimates:", beta_jive2)
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
-
-
-
-data = np.loadtxt('jive_many_test.csv', delimiter=',', skiprows=1)
-z1 = data[:, 0].reshape(-1,1)
-z2 = data[:, 1].reshape(-1,1)
-z3 = data[:, 2].reshape(-1,1)
-x1 = data[:, 3].reshape(-1,1)
-x2 = data[:, 4].reshape(-1,1)
-y = data[:, 5]
-
-X = np.hstack((x1,x2))
-Z = np.hstack((z1,z2,z3))
-
-print(X.shape)
-print(Z.shape)
-print(y.shape)
-
-
-JIVE2(y,X,Z)
