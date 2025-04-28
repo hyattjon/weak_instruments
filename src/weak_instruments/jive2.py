@@ -68,13 +68,17 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
+    ones = np.ones((N,1))
+    X = np.hstack((ones, X))
+    Z = np.hstack((ones, Z))
+
     # First pass to get fitted values and leverage
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
     fit = P @ X
     logger.debug(f"Fitted values obtained.\n")
 
     leverage = np.diag(P)
-    if np.any(leverage >= 1): # Add comment about high leverage as well 
+    if np.any(leverage >= 1):
         raise ValueError("Leverage values must be strictly less than 1 to avoid division by zero.")
     logger.debug(f"Leverage values obtained.\n")
 
@@ -82,18 +86,40 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     leverage = leverage.reshape(-1, 1)
     logger.debug(f"First pass complete.\n")
 
-    # Second pass to remove ith row and reduce bias 
-    X_jive2 = (fit - (leverage * X)) / (1 - (1 / N))
-    #print(fit)
-    #print(leverage)
-    #print(leverage*X)
-    #print(X)
+    # Second pass to remove ith row and reduce bias
+    fit = fit[:, 1:]
+    X = X[:,1:]
+    X_jive2 = (fit - leverage * X) / (1 - (1/N))
     logger.debug(f"Second pass complete.\n")
 
+    ones = np.ones((N,1))
+    X_jive2 = np.hstack((ones, X_jive2))
+    X = np.hstack((ones, X))
 
     # Calculate the JIVE2 estimates
-    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ (X_jive2.T @ Y) # Changed this to X instead of XJIVE2 to test
+    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
     logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
+
+    print("UJIVE2 Estimates:", beta_jive2)
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
 
+
+
+data = np.loadtxt('jive_many_test.csv', delimiter=',', skiprows=1)
+z1 = data[:, 0].reshape(-1,1)
+z2 = data[:, 1].reshape(-1,1)
+z3 = data[:, 2].reshape(-1,1)
+x1 = data[:, 3].reshape(-1,1)
+x2 = data[:, 4].reshape(-1,1)
+y = data[:, 5]
+
+X = np.hstack((x1,x2))
+Z = np.hstack((z1,z2,z3))
+
+print(X.shape)
+print(Z.shape)
+print(y.shape)
+
+
+JIVE2(y,X,Z)
