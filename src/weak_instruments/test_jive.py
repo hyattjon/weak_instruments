@@ -92,8 +92,8 @@ proj_x = np.dot(pz, X)
 first = np.linalg.inv(np.dot(proj_x.T, X))
 second = np.dot(proj_x.T, Y)
 bhat_2sls = np.dot(first, second)
-jive1 = JIVE1(Y,X,Z)
-jive2 = JIVE2(Y,X,Z)
+jive1 = JIVE1(Y,X,Z,talk=True)
+jive2 = JIVE2(Y,X,Z,talk=True)
 
 # Combine matrices into a single DataFrame
 df = pd.DataFrame({
