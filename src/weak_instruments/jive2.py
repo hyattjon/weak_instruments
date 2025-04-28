@@ -93,7 +93,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
 
     # Calculate the JIVE2 estimates
-    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ (X_jive2.T @ Y) 
+    beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ (X.T @ Y) # Changed this to X instead of XJIVE2 to test
     logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
