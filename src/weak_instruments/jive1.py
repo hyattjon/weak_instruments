@@ -4,6 +4,7 @@ import warnings
 import logging
 from numpy.typing import NDArray
 from typing import NamedTuple
+from scipy.stats import t
 
 # Set up the logger This helps with error outputs and stuff. We can use this instead of printing stuff
 logger = logging.getLogger(__name__)
@@ -71,6 +72,11 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
+    #Add the constant
+    ones = np.ones((N,1))
+    X = np.hstack((ones, X))
+    Z = np.hstack((ones, Z))
+
     # First pass to get fitted values and leverage
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
     fit = P @ X
@@ -86,16 +92,45 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     leverage = leverage.reshape(-1, 1)
 
     # Second pass to remove the ith row for unbiased estimates
-    X_jive = (fit - leverage * X) / (1 - leverage)
+    fit = fit[:, 1:]
+    X = X[:,1:]    
+    X_jive1 = (fit - leverage * X) / (1 - leverage)
     logger.debug(f"Second pass complete.\n")
 
+    X_jive1 = np.hstack((ones, X_jive1))
+    X = np.hstack((ones, X))
+
     # Calculate the optimal estimate
-    beta_jive1 = np.linalg.inv(X_jive.T @ X) @ X_jive.T @ Y
+    beta_jive1 = np.linalg.inv(X_jive1.T @ X) @ X_jive1.T @ Y
     logger.debug(f"JIVE1 Estimates:\n{beta_jive1}\n")
 
+    #Now, lets get standard errors and do a t-test. We follow Poi (2006).
+    midsum = 0
+    for i in range(N):
+        midsum += (Y[i] - X[i] @ beta_jive1)**2 * np.outer(X_jive1[i], X_jive1[i])
+    robust_v = np.linalg.inv(X_jive1.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive1)
+
+
+    #Lets do a hypothesis test that B1=0
+    pvals = []
+    tstats = []
+    cis = []
+
+    K = X.shape[1]
+    dof = N - K
+    for i in range(K):
+        t_stat_i = (beta_jive1[i])/((robust_v[i,i])**.5)
+        pval_i = 2 * (1 - t.cdf(np.abs(t_stat_i), df=dof))
+        t_crit_i = t.ppf(0.975, df=dof)
+
+        ci_lower = beta_jive1[i] - t_crit_i * (robust_v[i,i])**.5
+        ci_upper = beta_jive1[i] + t_crit_i * (robust_v[i,i])**.5
+        ci_i = (ci_lower, ci_upper)
+        tstats.append(t_stat_i)
+        pvals.append(pval_i)
+        cis.append(ci_i)    
+
     return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit)
-
-
 
 
 ### Future thoughts ###

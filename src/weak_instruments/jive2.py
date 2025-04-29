@@ -93,7 +93,6 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     X_jive2 = (fit - leverage * X) / (1 - (1/N))
     logger.debug(f"Second pass complete.\n")
 
-    ones = np.ones((N,1))
     X_jive2 = np.hstack((ones, X_jive2))
     X = np.hstack((ones, X))
 
