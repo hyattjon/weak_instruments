@@ -15,4 +15,10 @@ documentation for details.
    :maxdepth: 2
    :caption: Contents:
 
-   docs/source/modules
+   jive1
+   jive2
+   anderson_rubin
+   hful
+   lagrange_multiplier
+   liml
+   lim_et_al
