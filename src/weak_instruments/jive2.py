@@ -56,6 +56,13 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     # Check if Z is at least a one-dimensional array
     if Z.ndim < 1:
         raise ValueError(f"Z must be at least a one-dimensional array, but got shape {Z.shape}.")
+    
+    #If X/Z is a single vector:
+    if X.ndim == 1:
+        X = X.reshape(-1,1)
+    if Z.ndim == 1:
+        Z = Z.reshape(-1,1)
+    
     # Check that Y, X, and Z have consistent dimensions
     N = Y.shape[0]
     if X.shape[0] != N:
@@ -93,7 +100,6 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     X_jive2 = (fit - leverage * X) / (1 - (1/N))
     logger.debug(f"Second pass complete.\n")
 
-    ones = np.ones((N,1))
     X_jive2 = np.hstack((ones, X_jive2))
     X = np.hstack((ones, X))
 
@@ -126,5 +132,36 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         tstats.append(t_stat_i)
         pvals.append(pval_i)
         cis.append(ci_i)  
+
+    #Grab the R^2 for the model:
+    yfit = X @ beta_jive2
+    ybar = np.mean(Y)
+    r2 = 1 - np.sum((Y-yfit)**2) / np.sum((Y-ybar)**2)
+    
+    #Overall F-stat for the model:
+    q = X.shape[1]
+    e = Y-yfit
+    F = ((np.sum((yfit-ybar)**2)) / (q-1)) / ((e.T @ e)/(N-q))
+
+    #Mean-square error:
+    root_mse = ((1/(N-q)) * (np.sum((Y - yfit)**2)))**.5
+
+    #Adjustred R2
+    ar2 = 1 - (((1-r2)*(N-1))/(N-q))
+
+    #Now, we can add some first stage statistics if the number of endogenous regressors is 1
+    if X.ndim == 2:
+        X_fs = X[:,1]
+        fs_fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X_fs
+        xbar = np.mean(X_fs)
+
+        #First Stage R2
+        fs_r2 = 1 - np.sum((X_fs - fs_fit) ** 2) / np.sum((X_fs - xbar) ** 2)
+
+        #First stage F-stat
+        q_fs = Z.shape[1]
+        e_fs = X_fs - fs_fit
+        fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
+
 
     return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
