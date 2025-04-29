@@ -56,6 +56,13 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     # Check if Z is at least a one-dimensional array
     if Z.ndim < 1:
         raise ValueError(f"Z must be at least a one-dimensional array, but got shape {Z.shape}.")
+    
+    #If X/Z is a single vector:
+    if X.ndim == 1:
+        X = X.reshape(-1,1)
+    if Z.ndim == 1:
+        Z = Z.reshape(-1,1)
+    
     # Check that Y, X, and Z have consistent dimensions
     N = Y.shape[0]
     if X.shape[0] != N:

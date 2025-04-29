@@ -59,6 +59,12 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     if Z.ndim < 1:
         raise ValueError(f"Z must be at least a one-dimensional array, but got shape {Z.shape}.")
     
+    #If X/Z is a single vector:
+    if X.ndim == 1:
+        X = X.reshape(-1,1)
+    if Z.ndim == 1:
+        Z = Z.reshape(-1,1)
+    
     # Check that Y, X, and Z have consistent dimensions
     N = Y.shape[0]
     if X.shape[0] != N:
@@ -67,7 +73,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         raise ValueError(f"Z and Y must have the same number of rows. Got Z.shape[0] = {Z.shape[0]} and Y.shape[0] = {N}.")
     if Z.shape[1] <= X.shape[1]:
         warnings.warn(f"Normally this estimator is used when Z has more columns than X. In this case Z has {Z.shape[1]} columns and X has {X.shape[1]} columns.", RuntimeWarning)
-
+    
     logger.debug(f"Y has {Y.shape[0]} rows.\n")
     logger.debug(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
@@ -128,12 +134,12 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         ci_i = (ci_lower, ci_upper)
         tstats.append(t_stat_i)
         pvals.append(pval_i)
-        cis.append(ci_i)    
+        cis.append(ci_i) 
 
     return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit)
 
 
-### Future thoughts ###
+## ## Future thoughts ###
 """
 
 
