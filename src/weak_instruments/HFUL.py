@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.stats import norm
+#from scipy.stats import t
 import logging
 
 # Set up the logger
@@ -39,6 +40,7 @@ class HFULResult:
 
 def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnames=None) -> HFULResult:
     N = Y.shape[0]
+
 
     if X.ndim == 1:
         X = X.reshape(-1, 1)
@@ -131,5 +133,9 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
             logger.info("  t-stat: %f", tstat_list[i])
             logger.info("  p-value: %f", pval_list[i])
             logger.info("  95%% CI: (%f, %f)", ci_list[i][0], ci_list[i][1])
+    
+    print(betas)
+    print(ci_list)
+    print(tstat_list)
 
     return HFULResult(betas=betas, se_list=se_list, tstat_list=tstat_list, pval_list=pval_list, ci_list=ci_list)
