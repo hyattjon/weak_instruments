@@ -7,9 +7,9 @@ name = "weak_instruments"
 version = "0.0.1"
 authors = [
   { name="Jonathan Hyatt", email="hyatt.jonathan99@gmail.com" },
-  { name="Jacob Hutchings", email="jacobhutchings1@gmail.com},
+  { name="Jacob Hutchings", email="jacobhutchings1@gmail.com" }
 ]
-description = "A package for weak instruments in instrumental variable regression."
+description = "A package for weak instruments in an instrumental variables regression."
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -24,4 +24,7 @@ license-files = ["LICENSE*"]
 Homepage = "https://github.com/pypa/weak_instruments"
 Issues = "https://github.com/pypa/weak_instruments/issues"
 
-# Dependencies numpy
+[project.Dependencies]
+numpy = ">=1.21"
+scipy = ">=1.7"
+sphinx = ">=8.0"
