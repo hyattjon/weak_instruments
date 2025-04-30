@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.stats import t
+from scipy.stats import norm
 import logging
 
 # Set up the logger
@@ -39,6 +39,14 @@ class HFULResult:
 
 def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnames=None) -> HFULResult:
     N = Y.shape[0]
+
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    if Z.ndim == 1:
+        Z = Z.reshape(-1, 1)    
+    ones = np.ones((N,1))
+    X = np.hstack((ones, X))
+    Z = np.hstack((ones, Z))
     Xbar = np.hstack([Y, X])
 
     # Adjust logging level based on the `talk` parameter
@@ -89,8 +97,9 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
 
     V_hat = np.linalg.inv(H_hat) @ Sig_hat @ np.linalg.inv(H_hat)
 
-    dof = N - X.shape[1]
-    t_crit = t.ppf(0.975, df=dof)
+    #dof = N - X.shape[1]
+    #t_crit = t.ppf(0.975, df=dof)
+    norm_crit = norm.ppf(0.975)
 
     # Store results in lists
     se_list = []
@@ -101,9 +110,10 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
     for i in range(X.shape[1]):
         se_i = np.sqrt(V_hat[i, i])
         tstat_i = betas[i] / se_i
-        pval_i = 2 * (1 - t.cdf(np.abs(tstat_i), df=dof))
-        ci_lower_i = betas[i] - t_crit * se_i
-        ci_upper_i = betas[i] + t_crit * se_i
+        #pval_i = 2 * (1 - t.cdf(np.abs(tstat_i), df=dof))
+        pval_i = 2 * (1 - norm.cdf(np.abs(tstat_i)))
+        ci_lower_i = betas[i] - norm_crit * se_i
+        ci_upper_i = betas[i] + norm_crit * se_i
 
         se_list.append(se_i)
         tstat_list.append(tstat_i)
