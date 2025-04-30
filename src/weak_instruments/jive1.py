@@ -15,10 +15,20 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class JIVE1Result:
-    def __init__(self, beta: NDArray[np.float64], leverage: NDArray[np.float64], fitted_values: NDArray[np.float64]):
+    def __init__(self, beta: NDArray[np.float64], 
+                 leverage: NDArray[np.float64], 
+                 fitted_values: NDArray[np.float64], 
+                 r_squared: NDArray[np.float64], 
+                 adjusted_r_squared: NDArray[np.float64], 
+                 f_stat: NDArray[np.float64],
+                 standard_errors: NDArray[np.float64]):
         self.beta = beta
         self.leverage = leverage
         self.fitted_values = fitted_values
+        self.r_squared = r_squared
+        self.adjusted_r_squared = adjusted_r_squared
+        self.f_stat = f_stat
+        self.standard_errors = standard_errors
 
     def __getitem__(self, key: str):
         if key == 'beta':
@@ -27,11 +37,19 @@ class JIVE1Result:
             return self.leverage
         elif key == 'fitted_values':
             return self.fitted_values
+        elif key == 'r_squared':
+            return self.r_squared
+        elif key == 'adjusted_r_squared':
+            return self.adjusted_r_squared
+        elif key == 'f_stat':
+            return self.f_stat
+        elif key == 'standard_errors':
+            return self.standard_errors
         else:
-            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', or 'fitted_values'.")
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', or 'standard_errors'.")
 
     def __repr__(self):
-        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values})"
+        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
 def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE1Result:
     """
@@ -149,7 +167,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     #Mean-square error:
     root_mse = ((1/(N-q)) * (np.sum((Y - yfit)**2)))**.5
 
-    #Adjustred R2
+    #Adjusted R2
     ar2 = 1 - (((1-r2)*(N-1))/(N-q))
 
     #Now, we can add some first stage statistics if the number of endogenous regressors is 1
