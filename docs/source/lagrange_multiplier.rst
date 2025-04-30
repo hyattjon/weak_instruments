@@ -1,5 +1,5 @@
-lagrange_multiplier Module
-==========================
+lagrange_multiplier
+===================
 
 .. automodule:: weak_instruments.lagrange_multiplier
    :members:

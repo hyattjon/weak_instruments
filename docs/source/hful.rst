@@ -1,5 +1,5 @@
-hful Module
-============
+hful
+====
 
 .. automodule:: weak_instruments.hful
    :members:

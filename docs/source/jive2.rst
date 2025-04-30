@@ -1,5 +1,5 @@
-jive2 Module
-============
+jive2
+=====
 
 .. automodule:: weak_instruments.jive2
    :members:

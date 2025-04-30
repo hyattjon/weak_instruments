@@ -81,11 +81,11 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     Z = np.hstack((ones, Z))
 
     # First pass to get fitted values and leverage
-    P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
-    fit = P @ X
+    #P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
+    fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X
     logger.debug(f"Fitted values obtained.\n")
 
-    leverage = np.diag(P)
+    leverage = np.diag(Z @ np.linalg.inv(Z.T @ Z) @ Z.T)
     if np.any(leverage >= 1):
         raise ValueError("Leverage values must be strictly less than 1 to avoid division by zero.")
     logger.debug(f"Leverage values obtained.\n")

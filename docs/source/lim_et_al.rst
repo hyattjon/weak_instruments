@@ -1,5 +1,5 @@
-lim_et_al Module
-================
+lim_et_al
+=========
 
 .. automodule:: weak_instruments.lim_et_al
    :members:

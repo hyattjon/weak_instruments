@@ -1,5 +1,5 @@
-anderson_rubin Module
-=====================
+anderson_rubin
+==============
 
 .. automodule:: weak_instruments.anderson_rubin
    :members:

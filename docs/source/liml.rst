@@ -1,5 +1,5 @@
-liml Module
-============
+liml
+====
 
 .. automodule:: weak_instruments.liml
    :members:
