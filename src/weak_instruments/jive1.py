@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 from typing import NamedTuple
 from scipy.stats import t
 
-# Set up the logger This helps with error outputs and stuff. We can use this instead of printing stuff
+# Set up the logger This helps with error outputs and stuff. We can use this instead of printing
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Default logging level
 handler = logging.StreamHandler()
@@ -15,7 +15,8 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class JIVE1Result:
-    def __init__(self, beta: NDArray[np.float64], 
+    def __init__(self, 
+                 beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
                  fitted_values: NDArray[np.float64], 
                  r_squared: NDArray[np.float64], 
@@ -56,13 +57,41 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     Calculates the JIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
     Args:
-        Y (np.ndarray): A 1-D numpy array of the dependent variable (N x 1).
-        X (np.ndarray): A 2-D numpy array of the endogenous regressors (N x L).
-        Z (np.ndarray): A 2-D numpy array of the instruments (N x K), where K > L.
+        Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
+        X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L).
+        Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L.
         talk (bool): If True, provides detailed output for teaching purposes. Default is False.
 
     Returns:
-        JIVE1Result: A named tuple containing the JIVE1 estimates, leverage values, and fitted values.
+        JIVE1Result: An object containing the following attributes:
+            - beta (NDArray[np.float64]): The estimated coefficients for the model.
+            - leverage (NDArray[np.float64]): The leverage values for each observation.
+            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the JIVE1 estimator.
+            - r_squared (float): The R-squared value for the model.
+            - adjusted_r_squared (float): The adjusted R-squared value for the model.
+            - f_stat (float): The F-statistic for the model.
+            - standard_errors (NDArray[np.float64]): The robust standard errors for the estimated coefficients.
+
+    Raises:
+        ValueError: If the dimensions of Y, X, or Z are inconsistent or invalid.
+        RuntimeWarning: If the number of instruments (columns in Z) is not greater than the number of regressors (columns in X).
+
+    Notes:
+        - The JIVE1 estimator is a jackknife-based instrumental variable estimator designed to reduce bias in the presence of many instruments.
+        - The function performs a two-pass estimation:
+            1. The first pass calculates fitted values and leverage values using the instruments.
+            2. The second pass removes the ith observation to calculate unbiased estimates.
+        - Additional statistics such as R-squared, adjusted R-squared, and F-statistics are calculated for model evaluation.
+        - If the number of endogenous regressors is 1, first-stage statistics (R-squared and F-statistic) are also computed.
+
+    Example:
+        >>> import numpy as np
+        >>> from weak_instruments.jive1 import JIVE1
+        >>> Y = np.array([1, 2, 3])
+        >>> X = np.array([[1], [2], [3]])
+        >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
+        >>> result = JIVE1(Y, X, Z)
+        >>> print(result.beta)
     """
     # Adjust logging level based on the `talk` parameter. 
     if talk:
@@ -80,8 +109,10 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     #If X/Z is a single vector:
     if X.ndim == 1:
         X = X.reshape(-1,1)
+        logger.debug(f"X reshaped to {X.shape}.\n")
     if Z.ndim == 1:
         Z = Z.reshape(-1,1)
+        logger.debug(f"Z reshaped to {Z.shape}.\n")
     
     # Check that Y, X, and Z have consistent dimensions
     N = Y.shape[0]
@@ -103,11 +134,11 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     # First pass to get fitted values and leverage
     #P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
-    fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X
+    fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X # P @ X
     logger.debug(f"Fitted values obtained.\n")
 
     # Get the main diagonal from the projection matrix
-    leverage = np.diag(Z @ np.linalg.inv(Z.T @ Z) @ Z.T)
+    leverage = np.diag(Z @ np.linalg.inv(Z.T @ Z) @ Z.T) # np.diag(P)
     if np.any(leverage >= 1): 
         raise ValueError("Leverage values must be strictly less than 1 to avoid division by zero.")
     logger.debug(f"Leverage values obtained.\n")
@@ -184,7 +215,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
-    return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit)
+    return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
 
 
 ## ## Future thoughts ###

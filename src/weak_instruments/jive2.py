@@ -12,10 +12,21 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class JIVE2Result:
-    def __init__(self, beta: NDArray[np.float64], leverage: NDArray[np.float64], fitted_values: NDArray[np.float64]):
+    def __init__(self, 
+                 beta: NDArray[np.float64], 
+                 leverage: NDArray[np.float64], 
+                 fitted_values: NDArray[np.float64],
+                 r_squared: NDArray[np.float64], 
+                 adjusted_r_squared: NDArray[np.float64], 
+                 f_stat: NDArray[np.float64],
+                 standard_errors: NDArray[np.float64]):
         self.beta = beta
         self.leverage = leverage
         self.fitted_values = fitted_values
+        self.r_squared = r_squared
+        self.adjusted_r_squared = adjusted_r_squared
+        self.f_stat = f_stat
+        self.standard_errors = standard_errors
 
     def __getitem__(self, key: str):
         if key == 'beta':
@@ -24,11 +35,20 @@ class JIVE2Result:
             return self.leverage
         elif key == 'fitted_values':
             return self.fitted_values
+        elif key == 'r_squared':
+            return self.r_squared
+        elif key == 'adjusted_r_squared':
+            return self.adjusted_r_squared
+        elif key == 'f_stat':
+            return self.f_stat
+        elif key == 'standard_errors':
+            return self.standard_errors
         else:
-            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', or 'fitted_values'.")
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', or 'standard_errors'.")
+
 
     def __repr__(self):
-        return f"JIVE2Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values})"
+        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
 
 def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE2Result:
@@ -42,7 +62,35 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         talk (bool): If True, provides detailed output for teaching purposes. Default is False.
 
     Returns:
-        JIVE2Result: A custom result object containing the JIVE2 estimates, leverage values, and fitted values.
+        JIVE2Result: An object containing the following attributes:
+            - beta (NDArray[np.float64]): The estimated coefficients for the model.
+            - leverage (NDArray[np.float64]): The leverage values for each observation.
+            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the JIVE2 estimator.
+            - r_squared (float): The R-squared value for the model.
+            - adjusted_r_squared (float): The adjusted R-squared value for the model.
+            - f_stat (float): The F-statistic for the model.
+            - standard_errors (NDArray[np.float64]): The robust standard errors for the estimated coefficients.
+
+    Raises:
+        ValueError: If the dimensions of Y, X, or Z are inconsistent or invalid.
+        RuntimeWarning: If the number of instruments (columns in Z) is not greater than the number of regressors (columns in X).
+
+    Notes:
+        - The JIVE2 estimator is a jackknife-based instrumental variable estimator designed to reduce bias in the presence of many instruments.
+        - The function performs a two-pass estimation:
+            1. The first pass calculates fitted values and leverage values using the instruments.
+            2. The second pass removes the ith observation to calculate unbiased estimates.
+        - Additional statistics such as R-squared, adjusted R-squared, F-statistics, and robust standard errors are calculated for model evaluation.
+        - If the number of endogenous regressors is 1, first-stage statistics (R-squared and F-statistic) are also computed.
+
+    Example:
+        >>> import numpy as np
+        >>> from weak_instruments.jive2 import JIVE2
+        >>> Y = np.array([1, 2, 3])
+        >>> X = np.array([[1], [2], [3]])
+        >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
+        >>> result = JIVE2(Y, X, Z)
+        >>> print(result.beta)
     """
     # Adjust logging level based on the `talk` parameter
     if talk:
@@ -164,4 +212,4 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
 
-    return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit)
+    return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
