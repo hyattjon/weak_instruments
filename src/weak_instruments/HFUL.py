@@ -133,9 +133,5 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnam
             logger.info("  t-stat: %f", tstat_list[i])
             logger.info("  p-value: %f", pval_list[i])
             logger.info("  95%% CI: (%f, %f)", ci_list[i][0], ci_list[i][1])
-    
-    print(betas)
-    print(ci_list)
-    print(tstat_list)
 
     return HFULResult(betas=betas, se_list=se_list, tstat_list=tstat_list, pval_list=pval_list, ci_list=ci_list)
