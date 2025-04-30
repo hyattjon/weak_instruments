@@ -1,3 +1,4 @@
+# JIVE2 Estimator
 import numpy as np
 import logging
 from numpy.typing import NDArray

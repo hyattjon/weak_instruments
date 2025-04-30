@@ -1,4 +1,4 @@
-# JIVE (and JIVE-related estimators---there are a lot of these in the literature)
+# JIVE 1
 import numpy as np
 import warnings
 import logging
