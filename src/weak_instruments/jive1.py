@@ -58,9 +58,9 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     Args:
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
-        X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L).
-        Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L.
-        talk (bool): If True, provides detailed output for teaching purposes. Default is False.
+        X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
+        Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
+        talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns:
         JIVE1Result: An object containing the following attributes:
