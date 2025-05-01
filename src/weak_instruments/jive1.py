@@ -133,8 +133,8 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     Z = np.hstack((ones, Z))
 
     # First pass to get fitted values and leverage
-    #P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
-    fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X # P @ X
+    P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
+    fit = P @ X #  Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X 
     logger.debug(f"Fitted values obtained.\n")
 
     # Get the main diagonal from the projection matrix

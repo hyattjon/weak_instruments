@@ -22,15 +22,15 @@ $\[\frac{Z_i \hat{\pi} - h_i X_i}{1-(\frac{1}{N})}\]$
 
 
 
-# Jacknife Anderson-Rubin tests for many weak IV inference
+## Jacknife Anderson-Rubin tests for many weak IV inference
 
 
 
-# Lagrange Multiplier
+## Lagrange Multiplier
 
 
 
-# HFUL
+## HFUL
 
 
 
