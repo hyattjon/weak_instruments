@@ -127,6 +127,25 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
+
+    # Drop any constant columns from X and Z
+    if np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0):
+        if hasattr(X, 'columns'):  # Check if X has column names (e.g., a DataFrame)
+            dropped_columns = X.columns[np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
+            logger.debug(f"X has constant columns. Dropping columns: {list(dropped_columns)}")
+        else:
+            logger.debug("X has constant columns. Dropping constant columns.")
+        X = X[:, ~np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
+
+    if np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0):
+        if hasattr(Z, 'columns'):  # Check if Z has column names (e.g., a DataFrame)
+            dropped_columns = Z.columns[np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
+            logger.debug(f"Z has constant columns. Dropping columns: {list(dropped_columns)}")
+        else:
+            logger.debug("Z has constant columns. Dropping constant columns.")
+        Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
+
+        
     #Add the constant
     ones = np.ones((N,1))
     X = np.hstack((ones, X))
