@@ -33,3 +33,17 @@ def sjive(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         raise RuntimeError(f"Optimization failed: {result.message}")
     
     return result.x
+
+data = np.loadtxt('new_ijive.csv', delimiter=',', skiprows=1)
+z1 = data[:, 0].reshape(-1,1)
+z2 = data[:, 1].reshape(-1,1)
+x1 = data[:, 2].reshape(-1,1)
+W = data[:, 3].reshape(-1,1)
+y = data[:, 4]
+
+X = np.hstack((x1))
+Z = np.hstack((z1,z2))
+
+bhat = sjive(y,X,Z)
+
+print(bhat)
