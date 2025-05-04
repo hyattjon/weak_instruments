@@ -5,6 +5,8 @@ from scipy.stats import t
 def IJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False):
     if X.ndim == 1:
         X = X.reshape(-1, 1)
+    if W.ndim == 1:
+        W = W.reshape(-1, 1)    
 
     N = Z.shape[0]
     
