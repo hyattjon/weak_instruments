@@ -160,7 +160,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     midsum = 0
     for i in range(N):
         midsum += (Y[i] - X[i] @ beta_jive2)**2 * np.outer(X_jive2[i], X_jive2[i])
-    robust_v = np.linalg.inv(X_jive2.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive2)
+    robust_v = np.linalg.inv(X_jive2.T @ X_jive2) @ midsum @ np.linalg.inv(X_jive2.T @ X_jive2)
 
 
     #Lets do a hypothesis test that B1=0
