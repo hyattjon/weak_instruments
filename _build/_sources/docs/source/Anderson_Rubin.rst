@@ -1,5 +1,5 @@
-conf
-===========
+Anderson Rubin
+==============
 
 .. automodule:: conf
    :members:

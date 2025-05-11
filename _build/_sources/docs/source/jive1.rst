@@ -1,5 +1,5 @@
-conf
-===========
+Jive 1
+======
 
 .. automodule:: conf
    :members:
