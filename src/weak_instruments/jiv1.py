@@ -52,7 +52,7 @@ class JIVE1Result:
     def __repr__(self):
         return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
-def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE1Result:
+def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
     Calculates the JIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
@@ -147,9 +147,20 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
         
     #Add the constant
+    k = X.shape[1]
     ones = np.ones((N,1))
     X = np.hstack((ones, X))
     Z = np.hstack((ones, Z))
+
+    #Add the controls:
+    if G is not None:
+        if G.ndim == 1:
+            G = G.reshape(-1, 1)
+    if G.shape[0] != N:
+        raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
+    X = np.hstack((X, G))
+    Z = np.hstack((Z, G))
+    logger.debug("Controls G have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
@@ -166,13 +177,13 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     leverage = leverage.reshape(-1, 1)
 
     # Second pass to remove the ith row for unbiased estimates
-    fit = fit[:, 1:]
-    X = X[:,1:]    
+    fit = fit[:, 1:1+k]
+    X = X[:,1:1+k]    
     X_jive1 = (fit - leverage * X) / (1 - leverage)
     logger.debug(f"Second pass complete.\n")
 
-    X_jive1 = np.hstack((ones, X_jive1))
-    X = np.hstack((ones, X))
+    X_jive1 = np.hstack((ones, X_jive1, G))
+    X = np.hstack((ones, X, G))
 
     # Calculate the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive1.T @ X_jive1) @ X_jive1.T @ Y
