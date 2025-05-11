@@ -1,11 +1,86 @@
 import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import t
+import warnings
+import logging
 
-def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], cluster_ids: NDArray[np.int32]):
+# Set up the logger This helps with error outputs and stuff. We can use this instead of printing
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Default logging level
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(message)s')  # Simple format for teaching purposes
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+class CJIVEResult: 
+    def __init__(self, 
+                 beta: NDArray[np.float64], 
+                 standard_errors: NDArray[np.float64],
+                 r_squared: NDArray[np.float64], 
+                 f_stat: NDArray[np.float64], 
+                 cis: NDArray[np.float64]):
+        self.beta = beta
+        self.standard_errors = standard_errors
+        self.r_squared = r_squared
+        self.f_stat = f_stat
+        self.cis = cis
+
+
+    def __getitem__(self, key: str):
+        if key == 'beta':
+            return self.beta
+        elif key == 'standard_errors':
+            return self.standard_errors
+        elif key == 'r_squared':
+            return self.r_squared
+        elif key == 'f_stat':
+            return self.f_stat
+        elif key == 'cis':
+            return self.cis
+        else:
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'standard_errors, 'r_squared', 'f_stat', or 'cis'.")
+
+    def __repr__(self):
+        return f"CJIVEResult(beta={self.beta}, standard_errors={self.standard_errors}, r_squared={self.r_squared}, f_stat={self.f_stat}, cis={self.cis})"
+
+
+def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], cluster_ids: NDArray[np.int32], talk: bool = False) -> CJIVEResult:
     """
     Implements CJIVE estimator from Frandsen, ....
+    Parameters
+    ----------
+    Y : NDArray[np.float64]
+        The dependent variable.
+    W : NDArray[np.float64]
+        The matrix of control variables.
+    X : NDArray[np.float64]
+        The matrix of exogenous regressors.
+    Z : NDArray[np.float64]
+        The matrix of instruments.
+    cluster_ids : NDArray[np.int32]
+        The cluster ids for the observations.
+    talk : bool, optional
+        If True, prints additional information. The default is False.
+    Returns
+    -------
+    beta : NDArray[np.float64]
+        The estimated coefficients for the CJIVE model.
+    se : NDArray[np.float64]
+        The standard errors of the estimated coefficients.
+    r2 : NDArray[np.float64]
+        The R-squared value of the model.
+    F : NDArray[np.float64]
+        The F-statistic of the model.
+    cis : NDArray[np.float64]
+        The confidence intervals for the estimated coefficients.
     """
+
+    # Set logging level based on the talk parameter
+    if talk:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
+
     N = Z.shape[0]
     if X.ndim == 1:
         X = X.reshape(-1, 1)
@@ -89,10 +164,10 @@ def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
     e = Y-yfit
     F = ((np.sum((yfit-ybar)**2)) / (q-1)) / ((e.T @ e)/(N-q))
 
-    #Mean-square error:
+    #Root mean-squared error:
     root_mse = ((1/(N-q)) * (np.sum((Y - yfit)**2)))**.5
 
-    #Adjustred R2
+    #Adjusted R2
     ar2 = 1 - (((1-r2)*(N-1))/(N-q))
 
     #Now, we can add some first stage statistics if the number of endogenous regressors is 1

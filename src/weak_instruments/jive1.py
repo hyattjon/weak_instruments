@@ -52,7 +52,7 @@ class JIVE1Result:
     def __repr__(self):
         return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
-def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE1Result:
+def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], W: NDArray[np.float64], talk: bool = False) -> JIVE1Result:
     """
     Calculates the JIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
@@ -60,6 +60,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
         X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
         Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
+        W (NDArray[np.float64]): A 2-D numpy array of the control variables (N x M). Do not include the constant.
         talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns:
@@ -106,7 +107,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     if Z.ndim < 1:
         raise ValueError(f"Z must be at least a one-dimensional array, but got shape {Z.shape}.")
     
-    #If X/Z is a single vector:
+    #If X or Z is a single vector:
     if X.ndim == 1:
         X = X.reshape(-1,1)
         logger.debug(f"X reshaped to {X.shape}.\n")
@@ -145,7 +146,10 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
             logger.debug("Z has constant columns. Dropping constant columns.")
         Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
 
-        
+    # Drop any columns that are perfectly collinear keep the first column if something is dropped
+ 
+    
+
     #Add the constant
     ones = np.ones((N,1))
     X = np.hstack((ones, X))

@@ -34,3 +34,10 @@ $\[\frac{Z_i \hat{\pi} - h_i X_i}{1-(\frac{1}{N})}\]$
 
 
 
+Each file should check for:
+- Multicollinearity
+- Perfect collinearity
+- Dimensions of variables (Single column of controls etc)
+    - Check to see if dimensions are the same for all variables
+- Constant columns
+- Y and Z must be one dimensional vectors
