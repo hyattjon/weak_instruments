@@ -52,7 +52,7 @@ class JIVE2Result:
         return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
 
-def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False) -> JIVE2Result:
+def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
     """
     Calculates the JIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
     """
@@ -89,7 +89,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
     # Drop any constant columns from X and Z
-    if np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0):
+    if np.all(np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)):
         if hasattr(X, 'columns'):  # Check if X has column names (e.g., a DataFrame)
             dropped_columns = X.columns[np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
             logger.debug(f"X has constant columns. Dropping columns: {list(dropped_columns)}")
@@ -97,7 +97,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
             logger.debug("X has constant columns. Dropping constant columns.")
         X = X[:, ~np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
 
-    if np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0):
+    if np.all(np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)):
         if hasattr(Z, 'columns'):  # Check if Z has column names (e.g., a DataFrame)
             dropped_columns = Z.columns[np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
             logger.debug(f"Z has constant columns. Dropping columns: {list(dropped_columns)}")
@@ -106,9 +106,20 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
 
     # Add the constant
+    k = X.shape[1]
     ones = np.ones((N, 1))
     X = np.hstack((ones, X))
     Z = np.hstack((ones, Z))
+
+    #Add the controls:
+    if G is not None:
+        if G.ndim == 1:
+            G = G.reshape(-1, 1)
+    if G.shape[0] != N:
+        raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
+    X = np.hstack((X, G))
+    Z = np.hstack((Z, G))
+    logger.debug("Controls G have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
     fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X
@@ -124,13 +135,13 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"First pass complete.\n")
 
     # Second pass to remove ith row and reduce bias
-    fit = fit[:, 1:]
-    X = X[:, 1:]
+    fit = fit[:, 1:1+k]
+    X = X[:,1:1+k]
     X_jive2 = (fit - leverage * X) / (1 - (1 / N))
     logger.debug(f"Second pass complete.\n")
 
-    X_jive2 = np.hstack((ones, X_jive2))
-    X = np.hstack((ones, X))
+    X_jive2 = np.hstack((ones, X_jive2, G))
+    X = np.hstack((ones, X, G))
 
     # Calculate the JIVE2 estimates
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
