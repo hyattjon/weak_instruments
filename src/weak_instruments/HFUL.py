@@ -5,6 +5,7 @@ import logging
 from numpy.typing import NDArray
 from repo import *
 
+
 # Set up the logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Default logging level
@@ -42,7 +43,6 @@ class HFULResult:
 
 def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, G: NDArray[np.float64] | None = None, talk: bool = False, colnames=None) -> HFULResult:
     N = Y.shape[0]
-
 
     if X.ndim == 1:
         X = X.reshape(-1, 1)
