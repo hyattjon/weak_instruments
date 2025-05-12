@@ -61,6 +61,7 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
         X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L).
         Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L.
+        W (NDArray[np.float64]): A 2-D numpy array of the exogenous controls (N x G). Do not include the constant. These are not necessary for the function. 
         talk (bool): If True, provides detailed output for teaching purposes. Default is False.
 
     Returns:

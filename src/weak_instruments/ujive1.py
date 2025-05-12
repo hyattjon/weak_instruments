@@ -53,7 +53,7 @@ class UJIVE1Result:
     def __repr__(self):
         return f"UJIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
-def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
+def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], W: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
     Calculates the UJIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
@@ -61,7 +61,7 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
         X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
         Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
-        W (NDArray[np.float64]): A 2-D numpy array of the control variables (N x M). Do not include the constant.
+        W (NDArray[np.float64]): A 2-D numpy array of the exogenous controls (N x G). Do not include the constant. These are not necessary for the function. 
         talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns:
@@ -158,13 +158,13 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     Z = np.hstack((ones, Z))
 
     #Add the controls:
-    if G is not None:
-        if G.ndim == 1:
-            G = G.reshape(-1, 1)
-    if G.shape[0] != N:
+    if W is not None:
+        if W.ndim == 1:
+            W = W.reshape(-1, 1)
+    if W.shape[0] != N:
         raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
-    X = np.hstack((X, G))
-    Z = np.hstack((Z, G))
+    X = np.hstack((X, W))
+    Z = np.hstack((Z, W))
     logger.debug("Controls G have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
@@ -187,8 +187,8 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     X_jive1 = (fit - leverage * X) / (1 - leverage)
     logger.debug(f"Second pass complete.\n")
 
-    X_jive1 = np.hstack((ones, X_jive1, G))
-    X = np.hstack((ones, X, G))
+    X_jive1 = np.hstack((ones, X_jive1, W))
+    X = np.hstack((ones, X, W))
 
     # Calculate the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive1.T @ X) @ X_jive1.T @ Y

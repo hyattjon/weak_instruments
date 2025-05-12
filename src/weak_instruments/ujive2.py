@@ -53,9 +53,47 @@ class UJIVE2Result:
         return f"UJIVE2Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
 
-def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
+def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], W: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
     """
     Calculates the UJIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
+
+    Args:
+        Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
+        X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
+        Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
+        W (NDArray[np.float64]): A 2-D numpy array of the exogenous controls (N x G). Do not include the constant. These are not necessary for the function. 
+        talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
+
+    Returns:
+        UJIVE1Result: An object containing the following attributes:
+            - beta (NDArray[np.float64]): The estimated coefficients for the model.
+            - leverage (NDArray[np.float64]): The leverage values for each observation.
+            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the UJIVE1 estimator.
+            - r_squared (float): The R-squared value for the model.
+            - adjusted_r_squared (float): The adjusted R-squared value for the model.
+            - f_stat (float): The F-statistic for the model.
+            - standard_errors (NDArray[np.float64]): The robust standard errors for the estimated coefficients.
+
+    Raises:
+        ValueError: If the dimensions of Y, X, or Z are inconsistent or invalid.
+        RuntimeWarning: If the number of instruments (columns in Z) is not greater than the number of regressors (columns in X).
+
+    Notes:
+        - The JIVE2 estimator is a jackknife-based instrumental variable estimator designed to reduce bias in the presence of many instruments.
+        - The function performs a two-pass estimation:
+            1. The first pass calculates fitted values and leverage values using the instruments.
+            2. The second pass removes the ith observation to calculate unbiased estimates.
+        - Additional statistics such as R-squared, adjusted R-squared, and F-statistics are calculated for model evaluation.
+        - If the number of endogenous regressors is 1, first-stage statistics (R-squared and F-statistic) are also computed.
+
+    Example:
+        >>> import numpy as np
+        >>> from weak_instruments.ujive2 import UJIVE2
+        >>> Y = np.array([1, 2, 3])
+        >>> X = np.array([[1], [2], [3]])
+        >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
+        >>> result = UJIVE1(Y, X, Z)
+        >>> print(result.beta)
     """
     # Adjust logging level based on the `talk` parameter
     if talk:
@@ -113,13 +151,13 @@ def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     Z = np.hstack((ones, Z))
 
     #Add the controls:
-    if G is not None:
-        if G.ndim == 1:
-            G = G.reshape(-1, 1)
-    if G.shape[0] != N:
+    if W is not None:
+        if W.ndim == 1:
+            W = W.reshape(-1, 1)
+    if W.shape[0] != N:
         raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
-    X = np.hstack((X, G))
-    Z = np.hstack((Z, G))
+    X = np.hstack((X, W))
+    Z = np.hstack((Z, W))
     logger.debug("Controls G have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
@@ -141,8 +179,8 @@ def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     X_jive2 = (fit - leverage * X) / (1 - (1 / N))
     logger.debug(f"Second pass complete.\n")
 
-    X_jive2 = np.hstack((ones, X_jive2, G))
-    X = np.hstack((ones, X, G))
+    X_jive2 = np.hstack((ones, X_jive2, W))
+    X = np.hstack((ones, X, W))
 
     # Calculate the UJIVE2 estimates
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
