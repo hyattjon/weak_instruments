@@ -13,7 +13,7 @@ formatter = logging.Formatter('%(message)s')  # Simple format for teaching purpo
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-class JIVE2Result:
+class UJIVE2Result:
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
@@ -50,12 +50,12 @@ class JIVE2Result:
 
 
     def __repr__(self):
-        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
+        return f"UJIVE2Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
 
-def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
+def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
     """
-    Calculates the JIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
+    Calculates the UJIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
     """
     # Adjust logging level based on the `talk` parameter
     if talk:
@@ -144,9 +144,9 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     X_jive2 = np.hstack((ones, X_jive2, G))
     X = np.hstack((ones, X, G))
 
-    # Calculate the JIVE2 estimates
+    # Calculate the UJIVE2 estimates
     beta_jive2 = np.linalg.inv(X_jive2.T @ X) @ X_jive2.T @ Y
-    logger.debug(f"JIVE2 Estimates:\n{beta_jive2}\n")
+    logger.debug(f"UJIVE2 Estimates:\n{beta_jive2}\n")
 
     # Now, let's get standard errors and do a t-test. We follow Poi (2006).
     midsum = 0
@@ -203,4 +203,4 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2)) / (q_fs - 1)) / ((e_fs.T @ e_fs) / (N - q_fs))
 
-    return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
+    return UJIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)

@@ -15,7 +15,7 @@ formatter = logging.Formatter('%(message)s')  # Simple format for teaching purpo
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-class JIVE1Result:
+class UJIVE1Result:
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
@@ -51,11 +51,11 @@ class JIVE1Result:
             raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', or 'standard_errors'.")
 
     def __repr__(self):
-        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
+        return f"UJIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
-def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
+def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
-    Calculates the JIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
+    Calculates the UJIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
     Args:
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
@@ -65,10 +65,10 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns:
-        JIVE1Result: An object containing the following attributes:
+        UJIVE1Result: An object containing the following attributes:
             - beta (NDArray[np.float64]): The estimated coefficients for the model.
             - leverage (NDArray[np.float64]): The leverage values for each observation.
-            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the JIVE1 estimator.
+            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the UJIVE1 estimator.
             - r_squared (float): The R-squared value for the model.
             - adjusted_r_squared (float): The adjusted R-squared value for the model.
             - f_stat (float): The F-statistic for the model.
@@ -88,11 +88,11 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     Example:
         >>> import numpy as np
-        >>> from weak_instruments.jive1 import JIVE1
+        >>> from weak_instruments.ujive1 import UJIVE1
         >>> Y = np.array([1, 2, 3])
         >>> X = np.array([[1], [2], [3]])
         >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> result = JIVE1(Y, X, Z)
+        >>> result = UJIVE1(Y, X, Z)
         >>> print(result.beta)
     """
     # Adjust logging level based on the `talk` parameter. 
@@ -192,7 +192,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     # Calculate the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive1.T @ X) @ X_jive1.T @ Y
-    logger.debug(f"JIVE1 Estimates:\n{beta_jive1}\n")
+    logger.debug(f"UJIVE1 Estimates:\n{beta_jive1}\n")
 
     #Now, lets get standard errors and do a t-test. We follow Poi (2006).
     midsum = 0
@@ -250,7 +250,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
-    return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
+    return UJIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
 
 
 ## ## Future thoughts ###
