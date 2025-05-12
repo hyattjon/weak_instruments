@@ -55,12 +55,13 @@ class JIVE1Result:
 
 def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
-    Calculates the JIVE1 estimator defined by Blomquist and Dahlberg (1999) in Jackknife IV estimation.
+    Calculates the JIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
     Args:
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
         X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
         Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
+        W (NDArray[np.float64]): A 2-D numpy array of the control variables (N x M). Do not include the constant.
         talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns:
@@ -107,7 +108,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     if Z.ndim < 1:
         raise ValueError(f"Z must be at least a one-dimensional array, but got shape {Z.shape}.")
     
-    #If X/Z is a single vector:
+    #If X or Z is a single vector:
     if X.ndim == 1:
         X = X.reshape(-1,1)
         logger.debug(f"X reshaped to {X.shape}.\n")
@@ -146,7 +147,10 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
             logger.debug("Z has constant columns. Dropping constant columns.")
         Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
 
-        
+    # Drop any columns that are perfectly collinear keep the first column if something is dropped
+ 
+    
+
     #Add the constant
     k = X.shape[1]
     ones = np.ones((N,1))
@@ -187,14 +191,14 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     X = np.hstack((ones, X, G))
 
     # Calculate the optimal estimate
-    beta_jive1 = np.linalg.inv(X_jive1.T @ X_jive1) @ X_jive1.T @ Y
+    beta_jive1 = np.linalg.inv(X_jive1.T @ X) @ X_jive1.T @ Y
     logger.debug(f"JIVE1 Estimates:\n{beta_jive1}\n")
 
     #Now, lets get standard errors and do a t-test. We follow Poi (2006).
     midsum = 0
     for i in range(N):
         midsum += (Y[i] - X[i] @ beta_jive1)**2 * np.outer(X_jive1[i], X_jive1[i])
-    robust_v = np.linalg.inv(X_jive1.T @ X_jive1) @ midsum @ np.linalg.inv(X_jive1.T @ X_jive1)
+    robust_v = np.linalg.inv(X_jive1.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive1)
 
 
     #Lets do a hypothesis test that B1=0

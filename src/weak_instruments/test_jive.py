@@ -1,6 +1,6 @@
 import numpy as np
-from jive1 import *
-from jive2 import *
+from weak_instruments.ujive1 import *
+from weak_instruments.ujive2 import *
 import pandas as pd
 from repo import *
 
