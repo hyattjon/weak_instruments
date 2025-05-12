@@ -1,8 +1,116 @@
 import numpy as np
 from numpy.typing import NDArray
 from scipy.stats import t
+import logging
+import warnings
+from repo import *
+
+# Set up the logger This helps with error outputs and stuff. We can use this instead of printing
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  # Default logging level
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(message)s')  # Simple format for teaching purposes
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+class IJIVEResult:
+    def __init__(self, 
+                 beta: NDArray[np.float64],  
+                 f_stat: NDArray[np.float64],
+                 r_squared: np.float64, 
+                 adjusted_r_squared: np.float64, 
+                 root_mse: np.float64,
+                 pvals: np.float64,
+                 tstats: NDArray[np.float64],
+                 cis: NDArray[np.float64]):
+        self.beta = beta
+        self.f_stat = f_stat
+        self.r_squared = r_squared
+        self.adjusted_r_squared = adjusted_r_squared
+        self.root_mse = root_mse
+        self.pvals = pvals
+        self.tstats = tstats
+        self.cis = cis
+
+    def __getitem__(self, key: str): # bhat_IJIVE, r2, F, ar2, root_mse, pvals, tstats, cis
+        if key == 'beta':
+            return self.beta
+        elif key == 'r_squared':
+            return self.r_squared
+        elif key == 'adjusted_r_squared':
+            return self.adjusted_r_squared
+        elif key == 'f_stat':
+            return self.f_stat
+        elif key == 'root_mse':
+            return self.root_mse
+        elif key == 'pvals':
+            return self.pvals
+        elif key == 'tstats':
+            return self.tstats
+        elif key == 'cis':
+            return self.cis
+        else:
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'r_squared', 'adjusted_r_squared', 'root_mse', 'pvals', 'tstats', or 'cis'.")
+
+    def __repr__(self):
+        return f"IJIVEResult(beta={self.beta}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis})"
+
+
 
 def IJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False):
+    """
+    Calculates the Instrumental Variable estimator using the IJIVE method.
+    
+    Parameters
+    ----------
+    Y : NDArray[np.float64]
+        The dependent variable.
+    W : NDArray[np.float64]
+        The matrix of controls.
+    X : NDArray[np.float64]
+        The matrix of endogenous regressors.
+    Z : NDArray[np.float64]
+        The matrix of instruments.
+    talk : bool, optional
+        If True, prints additional information. Default is False.   
+
+    Returns
+    -------
+    beta : NDArray[np.float64]
+        The estimated coefficients.
+    r2 : NDArray[np.float64]
+        The R-squared value of the model.
+    F : NDArray[np.float64]
+        The F-statistic of the model.
+    ar2 : NDArray[np.float64]
+        The adjusted R-squared value of the model.
+    root_mse : NDArray[np.float64]
+        The root mean square error of the model.
+    pvals : np.float64
+        The p-values for the hypothesis tests.
+    tstats : np.float64
+        The t-statistics for the hypothesis tests.
+    cis : NDArray[np.float64]
+        The confidence intervals for the coefficients.  
+
+    Example
+    -------
+    >>> Y = np.array([1, 2, 3])
+    >>> W = np.array([[1, 0], [0, 1], [1, 1]])
+    >>> X = np.array([[1], [2], [3]])
+    >>> Z = np.array([[1], [2], [3]])
+    >>> result = IJIVE(Y, W, X, Z)
+    >>> print(result.beta)
+    [0.5]
+    
+    """
+
+    # Set the logger level based on the talk parameter
+    if talk:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.WARNING)
+
     if X.ndim == 1:
         X = X.reshape(-1, 1)
     if W.ndim == 1:

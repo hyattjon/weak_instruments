@@ -2,6 +2,8 @@ import numpy as np
 from jive1 import *
 from jive2 import *
 import pandas as pd
+from repo import *
+
 """
 def JIVE2(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk:bool = False) -> np.ndarray:
     
