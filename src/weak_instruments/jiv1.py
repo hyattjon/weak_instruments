@@ -54,7 +54,7 @@ class JIVE1Result:
 
 def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
-    Calculates the JIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
+    Calculates the JIVE1 estimator defined by Blomquist and Dahlberg (1999) in Jackknife IV estimation.
 
     Args:
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
@@ -129,7 +129,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
 
     # Drop any constant columns from X and Z
-    if np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0):
+    if np.all(np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)):
         if hasattr(X, 'columns'):  # Check if X has column names (e.g., a DataFrame)
             dropped_columns = X.columns[np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
             logger.debug(f"X has constant columns. Dropping columns: {list(dropped_columns)}")
@@ -137,7 +137,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
             logger.debug("X has constant columns. Dropping constant columns.")
         X = X[:, ~np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
 
-    if np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0):
+    if np.all(np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)):
         if hasattr(Z, 'columns'):  # Check if Z has column names (e.g., a DataFrame)
             dropped_columns = Z.columns[np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
             logger.debug(f"Z has constant columns. Dropping columns: {list(dropped_columns)}")

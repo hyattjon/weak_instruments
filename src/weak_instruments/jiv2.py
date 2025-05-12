@@ -54,7 +54,7 @@ class JIVE2Result:
 
 def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
     """
-    Calculates the JIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
+    Calculates the JIVE2 estimator defined by Blomquist and Dahlberg (1999) in Jackknife IV estimation.
 
     Args:
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
