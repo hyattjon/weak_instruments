@@ -5,6 +5,7 @@ import logging
 from numpy.typing import NDArray
 from typing import NamedTuple
 from scipy.stats import t
+from repo import *
 
 # Set up the logger This helps with error outputs and stuff. We can use this instead of printing
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ formatter = logging.Formatter('%(message)s')  # Simple format for teaching purpo
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-class JIVE1Result:
+class UJIVE1Result:
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
@@ -50,23 +51,24 @@ class JIVE1Result:
             raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', or 'standard_errors'.")
 
     def __repr__(self):
-        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
+        return f"UJIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
 
-def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
+def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
-    Calculates the JIVE1 estimator defined by Blomquist and Dahlberg (1999) in Jackknife IV estimation.
+    Calculates the UJIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
     Args:
         Y (NDArray[np.float64]): A 1-D numpy array of the dependent variable (N x 1).
         X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
         Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
+        W (NDArray[np.float64]): A 2-D numpy array of the control variables (N x M). Do not include the constant.
         talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns:
-        JIVE1Result: An object containing the following attributes:
+        UJIVE1Result: An object containing the following attributes:
             - beta (NDArray[np.float64]): The estimated coefficients for the model.
             - leverage (NDArray[np.float64]): The leverage values for each observation.
-            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the JIVE1 estimator.
+            - fitted_values (NDArray[np.float64]): The fitted values from the first pass of the UJIVE1 estimator.
             - r_squared (float): The R-squared value for the model.
             - adjusted_r_squared (float): The adjusted R-squared value for the model.
             - f_stat (float): The F-statistic for the model.
@@ -86,11 +88,11 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
 
     Example:
         >>> import numpy as np
-        >>> from weak_instruments.jive1 import JIVE1
+        >>> from weak_instruments.ujive1 import UJIVE1
         >>> Y = np.array([1, 2, 3])
         >>> X = np.array([[1], [2], [3]])
         >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
-        >>> result = JIVE1(Y, X, Z)
+        >>> result = UJIVE1(Y, X, Z)
         >>> print(result.beta)
     """
     # Adjust logging level based on the `talk` parameter. 
@@ -106,7 +108,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     if Z.ndim < 1:
         raise ValueError(f"Z must be at least a one-dimensional array, but got shape {Z.shape}.")
     
-    #If X/Z is a single vector:
+    #If X or Z is a single vector:
     if X.ndim == 1:
         X = X.reshape(-1,1)
         logger.debug(f"X reshaped to {X.shape}.\n")
@@ -145,7 +147,10 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
             logger.debug("Z has constant columns. Dropping constant columns.")
         Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
 
-        
+    # Drop any columns that are perfectly collinear keep the first column if something is dropped
+ 
+    
+
     #Add the constant
     k = X.shape[1]
     ones = np.ones((N,1))
@@ -186,14 +191,14 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     X = np.hstack((ones, X, G))
 
     # Calculate the optimal estimate
-    beta_jive1 = np.linalg.inv(X_jive1.T @ X_jive1) @ X_jive1.T @ Y
-    logger.debug(f"JIVE1 Estimates:\n{beta_jive1}\n")
+    beta_jive1 = np.linalg.inv(X_jive1.T @ X) @ X_jive1.T @ Y
+    logger.debug(f"UJIVE1 Estimates:\n{beta_jive1}\n")
 
     #Now, lets get standard errors and do a t-test. We follow Poi (2006).
     midsum = 0
     for i in range(N):
         midsum += (Y[i] - X[i] @ beta_jive1)**2 * np.outer(X_jive1[i], X_jive1[i])
-    robust_v = np.linalg.inv(X_jive1.T @ X_jive1) @ midsum @ np.linalg.inv(X_jive1.T @ X_jive1)
+    robust_v = np.linalg.inv(X_jive1.T @ X) @ midsum @ np.linalg.inv(X.T @ X_jive1)
 
 
     #Lets do a hypothesis test that B1=0
@@ -245,7 +250,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
-    return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
+    return UJIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
 
 
 ## ## Future thoughts ###

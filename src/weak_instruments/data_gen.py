@@ -1,6 +1,6 @@
 import numpy as np
 
-from jive1 import *
+from weak_instruments.ujive1 import *
 
 #Pick a vector length:
 n = 1000
