@@ -2,6 +2,7 @@ import numpy as np
 from scipy.stats import norm
 #from scipy.stats import t
 import logging
+from numpy.typing import NDArray
 
 # Set up the logger
 logger = logging.getLogger(__name__)
@@ -38,17 +39,28 @@ class HFULResult:
         return f"HFULResult(betas={self.betas}, se_list={self.se_list}, tstat_list={self.tstat_list}, pval_list={self.pval_list}, ci_list={self.ci_list})"
 
 
-def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, talk: bool = False, colnames=None) -> HFULResult:
+def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, G: NDArray[np.float64] | None = None, talk: bool = False, colnames=None) -> HFULResult:
     N = Y.shape[0]
 
 
     if X.ndim == 1:
         X = X.reshape(-1, 1)
     if Z.ndim == 1:
-        Z = Z.reshape(-1, 1)    
+        Z = Z.reshape(-1, 1)
+
+    if G is not None:
+        if G.ndim == 1:
+            G = G.reshape(-1, 1)
+        X = np.hstack((X, G))
+        Z = np.hstack((Z, G))
+
     ones = np.ones((N,1))
     X = np.hstack((ones, X))
     Z = np.hstack((ones, Z))
+
+    if Y.ndim == 1:
+        Y = Y.reshape(-1,1)
+
     Xbar = np.hstack([Y, X])
 
     # Adjust logging level based on the `talk` parameter
