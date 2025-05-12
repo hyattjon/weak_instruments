@@ -162,10 +162,10 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
         if W.ndim == 1:
             W = W.reshape(-1, 1)
     if W.shape[0] != N:
-        raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
+        raise ValueError(f"W must have the same number of rows as Y. Got G.shape[0] = {W.shape[0]} and Y.shape[0] = {N}.")
     X = np.hstack((X, W))
     Z = np.hstack((Z, W))
-    logger.debug("Controls G have been added to both X and Z.\n")
+    logger.debug("Controls W have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
