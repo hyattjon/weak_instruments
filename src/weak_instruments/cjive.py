@@ -114,7 +114,8 @@ def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
     bhat_CJIVE = np.linalg.inv(X.T @ C_CJIVE.T @ X) @ (X.T @ C_CJIVE.T @ Y)
 
     #Now, lets get some standard errors. We use Greene (2008)
-    Xg_sum = np.zeros((X.shape[1], X.shape[1]))
+    Xg_sum_1 = np.zeros((X.shape[1], X.shape[1]))
+    Xg_sum_2 = np.zeros((X.shape[1], X.shape[1]))    
     S_sum = np.zeros((X.shape[1], X.shape[1]))
 
     w_hat = Y - X @ bhat_CJIVE
@@ -122,14 +123,16 @@ def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
     for g in unique_clusters:
         idx = np.where(cluster_ids == g)[0]
         Xg = X[idx, :]
+        Cg = C_CJIVE[idx,:]
         w_hat_g = w_hat[idx]
         
-        Xg_sum += Xg.T @ Xg
-        S_sum += Xg.T @ np.outer(w_hat_g, w_hat_g) @ Xg
+        Xg_sum_1 += (Xg @ Cg).T @ Xg
+        Xg_sum_2 += Xg.T @ (Xg @ Cg)
+        S_sum += (Xg @ Cg).T @ np.outer(w_hat_g, w_hat_g) @ (Xg @ Cg)
 
     G = np.unique(cluster_ids).size
 
-    cluster_var = (G/(G-1)) * np.linalg.inv(Xg_sum) @ S_sum @ np.linalg.inv(Xg_sum)
+    cluster_var = (G/(G-1)) * np.linalg.inv(Xg_sum_1) @ S_sum @ np.linalg.inv(Xg_sum_2)
 
     se = np.sqrt(np.diag(cluster_var))
 
