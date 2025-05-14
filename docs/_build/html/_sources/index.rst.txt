@@ -5,7 +5,13 @@ Welcome to weak_instruments's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
+   liml
+   jive1
+   jive2
+   hful
+   lagrange_multiplier
+   lim_et_al
+   anderson_rubin
 
 Indices and tables
 ==================
