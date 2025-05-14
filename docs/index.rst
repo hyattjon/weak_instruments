@@ -12,6 +12,8 @@ Welcome to weak_instruments's documentation!
    lagrange_multiplier
    lim_et_al
    anderson_rubin
+   ujive1
+   ujive2
 
 Indices and tables
 ==================
