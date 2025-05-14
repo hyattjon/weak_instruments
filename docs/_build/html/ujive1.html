@@ -14,6 +14,8 @@
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ujive2" href="ujive2.html" />
+    <link rel="prev" title="anderson_rubin" href="anderson_rubin.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -102,6 +104,73 @@
 <dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">weak_instruments.ujive1.</span></span><span class="sig-name descname"><span class="pre">UJIVE1Result</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leverage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitted_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_squared</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjusted_r_squared</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_stat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">standard_errors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">root_mse</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvals</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tstats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Stores results for the UJIVE1 estimator.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.beta">
+<span class="sig-name descname"><span class="pre">beta</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.beta" title="Link to this definition">¶</a></dt>
+<dd><p>Estimated coefficients.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.leverage">
+<span class="sig-name descname"><span class="pre">leverage</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.leverage" title="Link to this definition">¶</a></dt>
+<dd><p>Leverage values for each observation.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.fitted_values">
+<span class="sig-name descname"><span class="pre">fitted_values</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.fitted_values" title="Link to this definition">¶</a></dt>
+<dd><p>Fitted values from the first pass.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.r_squared">
+<span class="sig-name descname"><span class="pre">r_squared</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.r_squared" title="Link to this definition">¶</a></dt>
+<dd><p>R-squared value.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.adjusted_r_squared">
+<span class="sig-name descname"><span class="pre">adjusted_r_squared</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.adjusted_r_squared" title="Link to this definition">¶</a></dt>
+<dd><p>Adjusted R-squared value.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.f_stat">
+<span class="sig-name descname"><span class="pre">f_stat</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.f_stat" title="Link to this definition">¶</a></dt>
+<dd><p>F-statistic.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.standard_errors">
+<span class="sig-name descname"><span class="pre">standard_errors</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.standard_errors" title="Link to this definition">¶</a></dt>
+<dd><p>Robust standard errors.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.root_mse">
+<span class="sig-name descname"><span class="pre">root_mse</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.root_mse" title="Link to this definition">¶</a></dt>
+<dd><p>Root mean squared error.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.pvals">
+<span class="sig-name descname"><span class="pre">pvals</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.pvals" title="Link to this definition">¶</a></dt>
+<dd><p>p-values for coefficients.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.tstats">
+<span class="sig-name descname"><span class="pre">tstats</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.tstats" title="Link to this definition">¶</a></dt>
+<dd><p>t-statistics for coefficients.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.cis">
+<span class="sig-name descname"><span class="pre">cis</span></span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.cis" title="Link to this definition">¶</a></dt>
+<dd><p>Confidence intervals for coefficients.</p>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="weak_instruments.ujive1.UJIVE1Result.summary">
 <span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#weak_instruments.ujive1.UJIVE1Result.summary" title="Link to this definition">¶</a></dt>
@@ -139,7 +208,7 @@
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="liml.html">liml</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jive1.html">jive1</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jive2.html">jive2</a></li>
@@ -147,12 +216,20 @@
 <li class="toctree-l1"><a class="reference internal" href="lagrange_multiplier.html">lagrange_multiplier</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lim_et_al.html">lim_et_al</a></li>
 <li class="toctree-l1"><a class="reference internal" href="anderson_rubin.html">anderson_rubin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ujive1</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#weak_instruments.ujive1.UJIVE1"><code class="docutils literal notranslate"><span class="pre">UJIVE1()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#weak_instruments.ujive1.UJIVE1Result"><code class="docutils literal notranslate"><span class="pre">UJIVE1Result</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ujive2.html">ujive2</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="anderson_rubin.html" title="previous chapter">anderson_rubin</a></li>
+      <li>Next: <a href="ujive2.html" title="next chapter">ujive2</a></li>
   </ul></li>
 </ul>
 </div>
