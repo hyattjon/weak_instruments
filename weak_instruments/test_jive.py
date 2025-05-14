@@ -2,7 +2,7 @@ import numpy as np
 from ujive1 import *
 from ujive2 import *
 import pandas as pd
-from repo import *
+
 
 
 #Pick a vector length:

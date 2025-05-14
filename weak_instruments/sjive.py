@@ -4,7 +4,7 @@ import logging
 from numpy.typing import NDArray
 from scipy.stats import t
 from scipy.optimize import minimize
-from repo import *
+
 
 def sjive(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False):
     U = Z @ np.linalg.inv(Z.T @ Z)

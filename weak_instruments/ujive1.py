@@ -5,7 +5,6 @@ import logging
 from numpy.typing import NDArray
 from typing import NamedTuple
 from scipy.stats import t
-#from repo import *
 from pprint import pprint
 
 # Set up the logger This helps with error outputs and stuff. We can use this instead of printing

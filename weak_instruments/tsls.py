@@ -2,7 +2,6 @@
 import numpy as np
 import logging
 from numpy.typing import NDArray
-from repo import *
 
 
 # Set up the logger

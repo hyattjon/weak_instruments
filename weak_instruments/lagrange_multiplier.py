@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import chi2
 import logging
-from repo import *
+
 
 # Set up the logger
 logger = logging.getLogger(__name__)
