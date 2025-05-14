@@ -14,15 +14,31 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class UJIVE2Result:
+    """
+    Stores results for the UJIVE2 estimator.
+
+    Attributes:
+        beta: Estimated coefficients.
+        leverage: Leverage values for each observation.
+        fitted_values: Fitted values from the first pass.
+        r_squared: R-squared value.
+        adjusted_r_squared: Adjusted R-squared value.
+        f_stat: F-statistic.
+        standard_errors: Robust standard errors.
+        root_mse: Root mean squared error.
+        pvals: p-values for coefficients.
+        tstats: t-statistics for coefficients.
+        cis: Confidence intervals for coefficients.
+    """
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
                  fitted_values: NDArray[np.float64], 
-                 r_squared: NDArray[np.float64], 
-                 adjusted_r_squared: NDArray[np.float64], 
-                 f_stat: NDArray[np.float64],
+                 r_squared: float, 
+                 adjusted_r_squared: float, 
+                 f_stat: float,
                  standard_errors: NDArray[np.float64],
-                 root_mse: NDArray[np.float64],
+                 root_mse: float,
                  pvals: NDArray[np.float64] | None = None,
                  tstats: NDArray[np.float64] | None = None,
                  cis: NDArray[np.float64] | None = None):
@@ -73,17 +89,15 @@ class UJIVE2Result:
         """
         import pandas as pd
 
-        # Create a DataFrame for coefficients, standard errors, t-stats, p-values, and confidence intervals
         summary_df = pd.DataFrame({
             "Coefficient": self.beta.flatten(),
             "Std. Error": np.sqrt(np.diag(self.standard_errors)),
-            "t-stat": self.tstats[0],
-            "P>|t|": self.pvals[0],
+            "t-stat": self.tstats,
+            "P>|t|": self.pvals,
             "Conf. Int. Low": [ci[0] for ci in self.cis],
             "Conf. Int. High": [ci[1] for ci in self.cis]
         })
 
-        # Print the summary
         print("\nUJIVE2 Regression Results")
         print("=" * 80)
         print(summary_df.round(6).to_string(index=False))

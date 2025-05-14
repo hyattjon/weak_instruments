@@ -16,6 +16,22 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class UJIVE1Result:
+    """
+    Stores results for the UJIVE1 estimator.
+
+    Attributes:
+        beta: Estimated coefficients.
+        leverage: Leverage values for each observation.
+        fitted_values: Fitted values from the first pass.
+        r_squared: R-squared value.
+        adjusted_r_squared: Adjusted R-squared value.
+        f_stat: F-statistic.
+        standard_errors: Robust standard errors.
+        root_mse: Root mean squared error.
+        pvals: p-values for coefficients.
+        tstats: t-statistics for coefficients.
+        cis: Confidence intervals for coefficients.
+    """
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
@@ -36,10 +52,10 @@ class UJIVE1Result:
         self.adjusted_r_squared = adjusted_r_squared
         self.f_stat = f_stat
         self.standard_errors = standard_errors
-        self.root_mse=root_mse, 
-        self.pvals=pvals, 
-        self.tstats=tstats, 
-        self.cis=cis
+        self.root_mse = root_mse
+        self.pvals = pvals
+        self.tstats = tstats
+        self.cis = cis
 
     def __getitem__(self, key: str):
         if key == 'beta':
@@ -80,8 +96,8 @@ class UJIVE1Result:
         summary_df = pd.DataFrame({
             "Coefficient": self.beta.flatten(),
             "Std. Error": np.sqrt(np.diag(self.standard_errors)),
-            "t-stat": self.tstats[0],
-            "P>|t|": self.pvals[0],
+            "t-stat": self.tstats,
+            "P>|t|": self.pvals,
             "Conf. Int. Low": [ci[0] for ci in self.cis],
             "Conf. Int. High": [ci[1] for ci in self.cis]
         })
@@ -94,7 +110,7 @@ class UJIVE1Result:
         print(f"R-squared: {self.r_squared:.6f}")
         print(f"Adjusted R-squared: {self.adjusted_r_squared:.6f}")
         print(f"F-statistic: {self.f_stat:.6f}")
-        print(f"Root MSE: {self.root_mse[0]:.6f}")
+        print(f"Root MSE: {self.root_mse:.6f}")
         print("=" * 80)
 
 def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, W: NDArray[np.float64] | None = None, talk: bool = False) -> UJIVE1Result:
@@ -301,16 +317,9 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
                         f_stat=F, 
                         standard_errors=robust_v, 
                         root_mse=root_mse, 
-                        pvals=pvals[0], 
-                        tstats=tstats[0], 
+                        pvals=pvals, 
+                        tstats=tstats, 
                         cis=cis)
 
 
 ## ## Future thoughts ###
-"""
-
-
-
-
-
-"""
