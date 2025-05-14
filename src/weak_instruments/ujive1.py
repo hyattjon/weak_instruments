@@ -6,12 +6,13 @@ from numpy.typing import NDArray
 from typing import NamedTuple
 from scipy.stats import t
 from repo import *
+from pprint import pprint
 
 # Set up the logger This helps with error outputs and stuff. We can use this instead of printing
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  # Default logging level
+logger.setLevel(logging.INFO)  
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(message)s')  # Simple format for teaching purposes
+formatter = logging.Formatter('%(message)s')  
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -23,7 +24,12 @@ class UJIVE1Result:
                  r_squared: NDArray[np.float64], 
                  adjusted_r_squared: NDArray[np.float64], 
                  f_stat: NDArray[np.float64],
-                 standard_errors: NDArray[np.float64]):
+                 standard_errors: NDArray[np.float64],
+                 root_mse: NDArray[np.float64],
+                 pvals: NDArray[np.float64] | None = None,
+                 tstats: NDArray[np.float64] | None = None,
+                 cis: NDArray[np.float64] | None = None
+                 ):
         self.beta = beta
         self.leverage = leverage
         self.fitted_values = fitted_values
@@ -31,6 +37,10 @@ class UJIVE1Result:
         self.adjusted_r_squared = adjusted_r_squared
         self.f_stat = f_stat
         self.standard_errors = standard_errors
+        self.root_mse=root_mse, 
+        self.pvals=pvals, 
+        self.tstats=tstats, 
+        self.cis=cis
 
     def __getitem__(self, key: str):
         if key == 'beta':
@@ -47,13 +57,48 @@ class UJIVE1Result:
             return self.f_stat
         elif key == 'standard_errors':
             return self.standard_errors
+        elif key == 'root_mse':
+            return self.root_mse
+        elif key == 'pvals':
+            return self.pvals
+        elif key == 'tstats':
+            return self.tstats
+        elif key == 'cis':
+            return self.cis
         else:
-            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', or 'standard_errors'.")
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', 'standard_errors', 'root_mse', 'pvals', 'tstats', or 'cis'.")
 
     def __repr__(self):
-        return f"UJIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
+        return f"UJIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis})"
 
-def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
+    def summary(self, pvals, tstats, cis, root_mse):
+        """
+        Prints a summary of the UJIVE1 results in a tabular format similar to statsmodels OLS.
+        """
+        import pandas as pd
+
+        # Create a DataFrame for coefficients, standard errors, t-stats, p-values, and confidence intervals
+        summary_df = pd.DataFrame({
+            "Coefficient": self.beta.flatten(),
+            "Std. Error": np.sqrt(np.diag(self.standard_errors)),
+            "t-stat": [[round(x,4) for x in sublist] for sublist in tstats],
+            "P>|t|": [[round(x,4) for x in sublist] for sublist in pvals],
+            "Conf. Int. Low": [ci[0] for ci in cis],
+            "Conf. Int. High": [ci[1] for ci in cis]
+        })
+
+        # Print the summary
+        print("\nUJIVE1 Regression Results")
+        print("=" * 80)
+        print(summary_df.round(4).to_string(index=False))
+        print("-" * 80)
+        print(f"R-squared: {self.r_squared:.4f}")
+        print(f"Adjusted R-squared: {self.adjusted_r_squared:.4f}")
+        print(f"F-statistic: {self.f_stat:.4f}")
+        print(f"Root MSE: {root_mse:.4f}")
+        print("=" * 80)
+
+def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> UJIVE1Result:
     """
     Calculates the UJIVE1 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 
@@ -130,26 +175,20 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
 
-    # Drop any constant columns from X and Z
-    if np.all(np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)):
-        if hasattr(X, 'columns'):  # Check if X has column names (e.g., a DataFrame)
-            dropped_columns = X.columns[np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
-            logger.debug(f"X has constant columns. Dropping columns: {list(dropped_columns)}")
-        else:
-            logger.debug("X has constant columns. Dropping constant columns.")
-        X = X[:, ~np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
+    # Drop constant columns from X
+    constant_columns_X = np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_X):  # Check if there are any constant columns
+        logger.debug(f"X has constant columns. Dropping columns: {np.where(constant_columns_X)[0]}")
+        X = X[:, ~constant_columns_X]  # Keep only non-constant columns
 
-    if np.all(np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)):
-        if hasattr(Z, 'columns'):  # Check if Z has column names (e.g., a DataFrame)
-            dropped_columns = Z.columns[np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
-            logger.debug(f"Z has constant columns. Dropping columns: {list(dropped_columns)}")
-        else:
-            logger.debug("Z has constant columns. Dropping constant columns.")
-        Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
+    # Drop constant columns from Z
+    constant_columns_Z = np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_Z):  # Check if there are any constant columns
+        logger.debug(f"Z has constant columns. Dropping columns: {np.where(constant_columns_Z)[0]}")
+        Z = Z[:, ~constant_columns_Z]  # Keep only non-constant columns
 
     # Drop any columns that are perfectly collinear keep the first column if something is dropped
  
-    
 
     #Add the constant
     k = X.shape[1]
@@ -161,11 +200,11 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     if G is not None:
         if G.ndim == 1:
             G = G.reshape(-1, 1)
-    if G.shape[0] != N:
-        raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
-    X = np.hstack((X, G))
-    Z = np.hstack((Z, G))
-    logger.debug("Controls G have been added to both X and Z.\n")
+        if G.shape[0] != N:
+            raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {G.shape[0]} and Y.shape[0] = {N}.")
+        X = np.hstack((X, G))
+        Z = np.hstack((Z, G))
+        logger.debug("Controls G have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
@@ -187,8 +226,8 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     X_jive1 = (fit - leverage * X) / (1 - leverage)
     logger.debug(f"Second pass complete.\n")
 
-    X_jive1 = np.hstack((ones, X_jive1, G))
-    X = np.hstack((ones, X, G))
+    #X_jive1 = np.hstack((ones, X_jive1, G))
+    #X = np.hstack((ones, X, G))
 
     # Calculate the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive1.T @ X) @ X_jive1.T @ Y
@@ -237,7 +276,7 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
     ar2 = 1 - (((1-r2)*(N-1))/(N-q))
 
     #Now, we can add some first stage statistics if the number of endogenous regressors is 1
-    if X.ndim == 2:
+    if X.shape[1] == 2: 
         X_fs = X[:,1]
         fs_fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X_fs
         xbar = np.mean(X_fs)
@@ -250,7 +289,17 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
-    return UJIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
+    return UJIVE1Result(beta=beta_jive1, 
+                        leverage=leverage, 
+                        fitted_values=fit, 
+                        r_squared=r2, 
+                        adjusted_r_squared=ar2, 
+                        f_stat=F, 
+                        standard_errors=robust_v, 
+                        root_mse=root_mse, 
+                        pvals=pvals, 
+                        tstats=tstats, 
+                        cis=cis)
 
 
 ## ## Future thoughts ###

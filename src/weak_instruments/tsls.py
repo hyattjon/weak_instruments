@@ -55,10 +55,10 @@ def TSLS(Y: NDArray[np.float64],
         raise ValueError("All input arrays must have the same number of rows.")
     
     # Get the pi hats
-    z_hat = Z @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X)
+    X_hat = X @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X)
 
     # Get the beta hats
-    beta_hat = np.linalg.inv(z_hat.T @ z_hat) @ (z_hat.T @ Y)
+    beta_hat = np.linalg.inv(X_hat.T @ X_hat) @ (X_hat.T @ Y)
 
     # Return the result
     return TSLSResult(beta=beta_hat)

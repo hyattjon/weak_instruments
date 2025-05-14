@@ -23,7 +23,11 @@ class JIVE1Result:
                  r_squared: NDArray[np.float64], 
                  adjusted_r_squared: NDArray[np.float64], 
                  f_stat: NDArray[np.float64],
-                 standard_errors: NDArray[np.float64]):
+                 standard_errors: NDArray[np.float64],
+                 root_mse: NDArray[np.float64],
+                 pvals: NDArray[np.float64],
+                 tstats: NDArray[np.float64],
+                 cis: NDArray[np.float64]):
         self.beta = beta
         self.leverage = leverage
         self.fitted_values = fitted_values
@@ -31,6 +35,10 @@ class JIVE1Result:
         self.adjusted_r_squared = adjusted_r_squared
         self.f_stat = f_stat
         self.standard_errors = standard_errors
+        self.root_mse=root_mse,
+        self.pvals=pvals,
+        self.tstats=tstats,
+        self.cis=cis
 
     def __getitem__(self, key: str):
         if key == 'beta':
@@ -47,11 +55,47 @@ class JIVE1Result:
             return self.f_stat
         elif key == 'standard_errors':
             return self.standard_errors
+        elif key == 'root_mse':
+            return self.root_mse
+        elif key == 'pvals':
+            return self.pvals
+        elif key == 'tstats':
+            return self.tstats
+        elif key == 'cis':
+            return self.cis
         else:
-            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', or 'standard_errors'.")
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', 'standard_errors', 'root_mse', 'pvals', 'tstats', or 'cis'.")
 
     def __repr__(self):
-        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
+        return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis})"
+
+
+    def summary(self, pvals, tstats, cis, root_mse):
+        """
+        Prints a summary of the JIVE1 results in a tabular format similar to statsmodels OLS.
+        """
+        import pandas as pd
+
+        # Create a DataFrame for coefficients, standard errors, t-stats, p-values, and confidence intervals
+        summary_df = pd.DataFrame({
+            "Coefficient": self.beta.flatten(),
+            "Std. Error": np.sqrt(np.diag(self.standard_errors)),
+            "t-stat": tstats,
+            "P>|t|": pvals,
+            "Conf. Int. Low": [ci[0] for ci in cis],
+            "Conf. Int. High": [ci[1] for ci in cis]
+        })
+
+        # Print the summary
+        print("\nJIVE1 Regression Results")
+        print("=" * 80)
+        print(summary_df.to_string(index=False))
+        print("-" * 80)
+        print(f"R-squared: {self.r_squared:.4f}")
+        print(f"Adjusted R-squared: {self.adjusted_r_squared:.4f}")
+        print(f"F-statistic: {self.f_stat:.4f}")
+        print(f"Root MSE: {root_mse:.4f}")
+        print("=" * 80)
 
 def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
@@ -246,7 +290,17 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
-    return JIVE1Result(beta=beta_jive1, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
+    return JIVE1Result(beta=beta_jive1, 
+                       leverage=leverage, 
+                       fitted_values=fit, 
+                       r_squared=r2, 
+                       adjusted_r_squared=ar2, 
+                       f_stat=F, 
+                       standard_errors=robust_v,
+                       root_mse=root_mse,
+                       pvals=pvals,
+                       tstats=tstats,
+                       cis=cis)
 
 
 ## ## Future thoughts ###
