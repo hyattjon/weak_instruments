@@ -10,7 +10,7 @@ from numpy.typing import NDArray
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Default logging level
 handler = logging.StreamHandler()
-formatter = logging.Formatter('%(message)s')  # Simple format for teaching purposes
+formatter = logging.Formatter('%(message)s')  
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
