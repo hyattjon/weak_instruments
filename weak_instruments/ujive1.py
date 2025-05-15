@@ -153,7 +153,7 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
         >>> X = np.array([[1], [2], [3]])
         >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
         >>> result = UJIVE1(Y, X, Z)
-        >>> print(result.beta)
+        >>> print(result.summary())
     """
     # Adjust logging level based on the `talk` parameter. 
     if talk:
@@ -320,6 +320,3 @@ def UJIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
                         pvals=pvals, 
                         tstats=tstats, 
                         cis=cis)
-
-
-## ## Future thoughts ###
