@@ -4,8 +4,6 @@ from scipy.stats import norm
 import logging
 from numpy.typing import NDArray
 
-# l 
-
 # Set up the logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)  # Default logging level
