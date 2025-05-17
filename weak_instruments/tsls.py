@@ -196,25 +196,17 @@ def TSLS(Y: NDArray[np.float64],
         raise ValueError("All input arrays must have the same number of rows.")
     
     # Get the pi hats
-    X_hat = Z @ np.linalg.inv(Z.T @ Z) @ (Z.T @ X)
-
-    # Decorrelate the instruments
-    if W is not None:
-        X_hat = np.hstack((ones, X_hat, W))
-        X = np.hstack((ones, X, W))
-    else:
-        X_hat = np.hstack((ones, X_hat))
-        X = np.hstack((ones, X))
+    X_hat = (Z @ np.linalg.inv(Z.T @ Z) @ Z.T) @ X
 
 
     # Get the beta hats
-    beta_hat = np.linalg.pinv(X_hat.T @ X) @ (X_hat.T @ Y)
+    beta_hat = np.linalg.inv(X_hat.T @ X_hat) @ (X_hat.T @ Y)
 
     #Now, lets get standard errors and do a t-test. We follow Poi (2006).
     midsum = 0
     for i in range(N):
         midsum += (Y[i] - X[i] @ beta_hat)**2 * np.outer(X_hat[i], X_hat[i])
-    robust_v = np.linalg.pinv(X_hat.T @ X) @ midsum @ np.linalg.pinv(X.T @ X_hat)
+    robust_v = np.linalg.inv(X_hat.T @ X) @ midsum @ np.linalg.inv(X.T @ X_hat)
 
 
     #Lets do a hypothesis test that B1=0
