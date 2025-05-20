@@ -142,6 +142,20 @@ def sjive(
     >>> bhat = sjive(Y, X, Z)
     >>> print(bhat)
     """
+
+    # Convert pandas DataFrames/Series to numpy arrays
+    if hasattr(Y, "values"):
+        Y = Y.values
+    if hasattr(X, "values"):
+        X = X.values
+    if hasattr(Z, "values"):
+        Z = Z.values
+    if G is not None and hasattr(G, "values"):
+        G = G.values
+    if W is not None and hasattr(W, "values"):
+        W = W.values
+
+        
     U = Z @ np.linalg.inv(Z.T @ Z)
     P = Z.T
     D = np.diag(np.diag(U@P))

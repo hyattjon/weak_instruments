@@ -152,6 +152,18 @@ def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
     >>> result.summary()
     """
 
+    # Convert pandas DataFrames/Series to numpy arrays
+    if hasattr(Y, "values"):
+        Y = Y.values
+    if hasattr(X, "values"):
+        X = X.values
+    if hasattr(Z, "values"):
+        Z = Z.values
+    if G is not None and hasattr(G, "values"):
+        G = G.values
+    if W is not None and hasattr(W, "values"):
+        W = W.values
+        
     # Set logging level based on the talk parameter
     if talk:
         logger.setLevel(logging.DEBUG)

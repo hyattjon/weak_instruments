@@ -183,6 +183,20 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         >>> result = JIVE1(Y, X, Z)
         >>> print(result.beta)
     """
+
+    # Convert pandas DataFrames/Series to numpy arrays
+    if hasattr(Y, "values"):
+        Y = Y.values
+    if hasattr(X, "values"):
+        X = X.values
+    if hasattr(Z, "values"):
+        Z = Z.values
+    if G is not None and hasattr(G, "values"):
+        G = G.values
+    if W is not None and hasattr(W, "values"):
+        W = W.values
+
+
     # Adjust logging level based on the `talk` parameter. 
     if talk:
         logger.setLevel(logging.DEBUG)

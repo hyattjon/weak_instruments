@@ -138,6 +138,20 @@ def lm_test(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, b: np.ndarray, talk: bo
     >>> result = lm_test(Y, X, Z, b)
     >>> result.summary()
     """
+
+    # Convert pandas DataFrames/Series to numpy arrays
+    if hasattr(Y, "values"):
+        Y = Y.values
+    if hasattr(X, "values"):
+        X = X.values
+    if hasattr(Z, "values"):
+        Z = Z.values
+    if G is not None and hasattr(G, "values"):
+        G = G.values
+    if W is not None and hasattr(W, "values"):
+        W = W.values
+
+
     # Adjust logging level based on the `talk` parameter
     if talk:
         logger.setLevel(logging.DEBUG)
