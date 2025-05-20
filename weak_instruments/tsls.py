@@ -16,20 +16,30 @@ logger.addHandler(handler)
 
 class TSLSResult:
     """
-    A class to hold the results of the Two-Stage Least Squares (2SLS) estimation.
+    Stores results for the TSLS estimator.
+
     Attributes
     ----------
     beta : NDArray[np.float64]
-        The estimated coefficients from the 2SLS regression.
-        r_squared: R-squared value.
-        adjusted_r_squared: Adjusted R-squared value.
-        f_stat: F-statistic.
-        standard_errors: Robust standard errors.
-        root_mse: Root mean squared error.
-        pvals: p-values for coefficients.
-        tstats: t-statistics for coefficients.
-        cis: Confidence intervals for coefficients.
+        Estimated coefficients from the TSLS regression.
+    r_squared : float
+        R-squared value.
+    adjusted_r_squared : float
+        Adjusted R-squared value.
+    f_stat : float
+        F-statistic for the model.
+    standard_errors : NDArray[np.float64]
+        Robust standard errors.
+    root_mse : float
+        Root mean squared error.
+    pvals : NDArray[np.float64] or None
+        p-values for coefficients.
+    tstats : NDArray[np.float64] or None
+        t-statistics for coefficients.
+    cis : NDArray[np.float64] or None
+        Confidence intervals for coefficients.
     """
+   
     def __init__(self, 
                  beta: NDArray[np.float64],
                  r_squared: float = None,
@@ -51,6 +61,23 @@ class TSLSResult:
         self.cis = cis
 
     def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to TSLSResult attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'beta':
             return self.beta
         elif key == 'r_squared':
@@ -73,11 +100,14 @@ class TSLSResult:
             raise KeyError(f"Invalid key '{key}'. The valid keys are 'beta', ''r_squared', 'adjusted_r_squared', 'f_stat', 'standard_errors', 'root_mse', 'pvals', 'tstat', or 'cis'.")
 
     def __repr__(self):
+        """
+        Returns a string representation of the TSLSResult object.
+        """
         return f"JIVE1Result(beta={self.beta}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis})"
     
     def summary(self):
         """
-        Prints a summary of the TSLS results.
+        Prints a summary of the TSLS results in a tabular format similar to statsmodels OLS.
         """
         import pandas as pd
 
@@ -111,16 +141,56 @@ def TSLS(Y: NDArray[np.float64],
 
     Parameters
     ----------
-    Y (NDArray[np.float64]): A 2-D numpy array of the dependent variable (N x 1).
-    X (NDArray[np.float64]): A 2-D numpy array of the endogenous regressors (N x L). Do not inlude the constant.
-    Z (NDArray[np.float64]): A 2-D numpy array of the instruments (N x K), where K > L. Do not include the constant.
-    W (NDArray[np.float64]): A 2-D numpy array of the exogenous controls (N x G). Do not include the constant. These are not necessary for the function. 
-    talk (bool): If True, provides detailed output for teaching / debugging purposes. Default is False.
+    Y : NDArray[np.float64]
+        A 1-D numpy array of the dependent variable (N,).
+    X : NDArray[np.float64]
+        A 2-D numpy array of the endogenous regressors (N, L). Do not include the constant.
+    Z : NDArray[np.float64]
+        A 2-D numpy array of the instruments (N, K), where K >= L. Do not include the constant.
+    W : NDArray[np.float64], optional
+        A 2-D numpy array of the exogenous controls (N, G). Do not include the constant. Default is None.
+    talk : bool, optional
+        If True, provides detailed output for teaching / debugging purposes. Default is False.
 
     Returns
     -------
     TSLSResult
-        An object containing the estimated coefficients.
+        An object containing the following attributes:
+            - beta (NDArray[np.float64]): The estimated coefficients for the model.
+            - r_squared (float): The R-squared value for the model.
+            - adjusted_r_squared (float): The adjusted R-squared value for the model.
+            - f_stat (float): The F-statistic for the model.
+            - standard_errors (NDArray[np.float64]): The robust standard errors for the estimated coefficients.
+            - root_mse (float): The root mean squared error.
+            - pvals (list of float): p-values for coefficients.
+            - tstats (list of float): t-statistics for coefficients.
+            - cis (list of tuple): Confidence intervals for coefficients.
+
+    Raises
+    ------
+    ValueError
+        If the dimensions of Y, X, or Z are inconsistent or invalid.
+    RuntimeWarning
+        If the number of instruments (columns in Z) is not greater than the number of regressors (columns in X).
+
+    Notes
+    -----
+    - The TSLS estimator is a classic instrumental variable estimator.
+    - The function performs two stages:
+        1. The first stage projects X onto the space spanned by Z (and W if provided).
+        2. The second stage regresses Y on the fitted values from the first stage.
+    - Additional statistics such as R-squared, adjusted R-squared, and F-statistics are calculated for model evaluation.
+    - If the number of endogenous regressors is 1, first-stage statistics (R-squared and F-statistic) are also computed.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from weak_instruments.tsls import TSLS
+    >>> Y = np.array([1, 2, 3])
+    >>> X = np.array([[1], [2], [3]])
+    >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
+    >>> result = TSLS(Y, X, Z)
+    >>> print(result.summary())
     """
 
     # Adjust logging level based on the `talk` parameter. 
