@@ -14,6 +14,22 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class CJIVEResult: 
+    """
+    Stores results for the CJIVE estimator.
+
+    Attributes
+    ----------
+    beta : NDArray[np.float64]
+        Estimated coefficients for the CJIVE model.
+    standard_errors : NDArray[np.float64]
+        Standard errors of the estimated coefficients.
+    r_squared : float
+        R-squared value of the model.
+    f_stat : float
+        F-statistic of the model.
+    cis : NDArray[np.float64]
+        Confidence intervals for the estimated coefficients.
+    """
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  standard_errors: NDArray[np.float64],
@@ -28,6 +44,23 @@ class CJIVEResult:
 
 
     def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to CJIVEResult attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'beta':
             return self.beta
         elif key == 'standard_errors':
@@ -44,6 +77,27 @@ class CJIVEResult:
     def __repr__(self):
         return f"CJIVEResult(beta={self.beta}, standard_errors={self.standard_errors}, r_squared={self.r_squared}, f_stat={self.f_stat}, cis={self.cis})"
 
+    def summary(self):
+        """
+        Prints a summary of the CJIVE results in a tabular format similar to statsmodels OLS.
+        """
+        import pandas as pd
+        import numpy as np
+
+        summary_df = pd.DataFrame({
+            "Coefficient": self.beta.flatten(),
+            "Std. Error": np.sqrt(np.diag(self.standard_errors)) if self.standard_errors is not None else np.nan,
+            "Conf. Int. Low": [ci[0] for ci in self.cis] if self.cis is not None else np.nan,
+            "Conf. Int. High": [ci[1] for ci in self.cis] if self.cis is not None else np.nan
+        })
+
+        print("\nCJIVE Regression Results")
+        print("=" * 80)
+        print(summary_df.round(6).to_string(index=False))
+        print("-" * 80)
+        print(f"R-squared: {self.r_squared:.6f}" if self.r_squared is not None else "R-squared: N/A")
+        print(f"F-statistic: {self.f_stat:.6f}" if self.f_stat is not None else "F-statistic: N/A")
+        print("=" * 80)
 
 def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], cluster_ids: NDArray[np.int32], talk: bool = False) -> CJIVEResult:
     """
@@ -62,18 +116,40 @@ def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
         The cluster ids for the observations.
     talk : bool, optional
         If True, prints additional information. The default is False.
+
     Returns
     -------
-    beta : NDArray[np.float64]
-        The estimated coefficients for the CJIVE model.
-    se : NDArray[np.float64]
-        The standard errors of the estimated coefficients.
-    r2 : NDArray[np.float64]
-        The R-squared value of the model.
-    F : NDArray[np.float64]
-        The F-statistic of the model.
-    cis : NDArray[np.float64]
-        The confidence intervals for the estimated coefficients.
+    CJIVEResult
+        An object containing the following attributes:
+            - beta (NDArray[np.float64]): The estimated coefficients for the CJIVE model.
+            - standard_errors (NDArray[np.float64]): The standard errors of the estimated coefficients.
+            - r_squared (float): The R-squared value of the model.
+            - f_stat (float): The F-statistic of the model.
+            - cis (NDArray[np.float64]): The confidence intervals for the estimated coefficients.
+
+    Raises
+    ------
+    ValueError
+        If the dimensions of the inputs are inconsistent or invalid.
+
+    Notes
+    -----
+    - The CJIVE estimator is robust to clustering and weak instruments.
+    - The function computes coefficient estimates, standard errors, confidence intervals, R-squared, and F-statistics.
+    - Standard errors are clustered by the provided cluster IDs.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from weak_instruments.cjive import CJIVE
+    >>> n = 100
+    >>> Y = np.random.randn(n)
+    >>> W = np.random.randn(n, 1)
+    >>> X = np.random.randn(n, 1)
+    >>> Z = np.random.randn(n, 2)
+    >>> cluster_ids = np.random.randint(0, 5, size=n)
+    >>> result = CJIVE(Y, W, X, Z, cluster_ids)
+    >>> result.summary()
     """
 
     # Set logging level based on the talk parameter
@@ -188,6 +264,10 @@ def CJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))    
 
-    return bhat_CJIVE, se, r2, F, cis
+    return CJIVEResult(beta=bhat_CJIVE,
+                       standard_errors=se,
+                       r_squared=r2,
+                       f_stat=F,
+                       cis=cis)
 
 

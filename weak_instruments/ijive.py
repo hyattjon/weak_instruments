@@ -14,6 +14,28 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class IJIVEResult:
+    """
+    Stores results for the IJIVE estimator.
+
+    Attributes
+    ----------
+    beta : NDArray[np.float64]
+        Estimated coefficients for the IJIVE model.
+    f_stat : float
+        F-statistic of the model.
+    r_squared : float
+        R-squared value of the model.
+    adjusted_r_squared : float
+        Adjusted R-squared value of the model.
+    root_mse : float
+        Root mean squared error of the model.
+    pvals : list of float
+        p-values for the estimated coefficients.
+    tstats : list of float
+        t-statistics for the estimated coefficients.
+    cis : list of tuple
+        Confidence intervals for the estimated coefficients.
+    """
     def __init__(self, 
                  beta: NDArray[np.float64],  
                  f_stat: NDArray[np.float64],
@@ -32,7 +54,24 @@ class IJIVEResult:
         self.tstats = tstats
         self.cis = cis
 
-    def __getitem__(self, key: str): # bhat_IJIVE, r2, F, ar2, root_mse, pvals, tstats, cis
+    def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to IJIVEResult attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'beta':
             return self.beta
         elif key == 'r_squared':
@@ -55,6 +94,31 @@ class IJIVEResult:
     def __repr__(self):
         return f"IJIVEResult(beta={self.beta}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis})"
 
+    def summary(self):
+        """
+        Prints a summary of the IJIVE results in a tabular format similar to statsmodels OLS and UJIVE1.
+        """
+        import pandas as pd
+        import numpy as np
+
+        summary_df = pd.DataFrame({
+            "Coefficient": self.beta.flatten(),
+            "Std. Error": [np.sqrt(ci[1] - ci[0]) / (2 * 1.96) if self.cis is not None else np.nan for ci in self.cis],
+            "t-stat": self.tstats if self.tstats is not None else np.nan,
+            "P>|t|": self.pvals if self.pvals is not None else np.nan,
+            "Conf. Int. Low": [ci[0] for ci in self.cis] if self.cis is not None else np.nan,
+            "Conf. Int. High": [ci[1] for ci in self.cis] if self.cis is not None else np.nan
+        })
+
+        print("\nIJIVE Regression Results")
+        print("=" * 80)
+        print(summary_df.round(6).to_string(index=False))
+        print("-" * 80)
+        print(f"R-squared: {self.r_squared:.6f}" if self.r_squared is not None else "R-squared: N/A")
+        print(f"Adjusted R-squared: {self.adjusted_r_squared:.6f}" if self.adjusted_r_squared is not None else "Adjusted R-squared: N/A")
+        print(f"F-statistic: {self.f_stat:.6f}" if self.f_stat is not None else "F-statistic: N/A")
+        print(f"Root MSE: {self.root_mse:.6f}" if self.root_mse is not None else "Root MSE: N/A")
+        print("=" * 80)
 
 
 def IJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False):
@@ -189,6 +253,11 @@ def IJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))    
 
-
-
-    return bhat_IJIVE, r2, F, ar2, root_mse, pvals, tstats, cis
+    return IJIVEResult(beta=bhat_IJIVE,
+                       r_squared=r2,
+                       f_stat=F,
+                       adjusted_r_squared=ar2,
+                       root_mse=root_mse,
+                       pvals=pvals,
+                       tstats=tstats,
+                       cis=cis)

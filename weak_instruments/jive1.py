@@ -15,6 +15,34 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class JIVE1Result:
+    """
+    Stores results for the JIVE1 estimator.
+
+    Attributes
+    ----------
+    beta : NDArray[np.float64]
+        Estimated coefficients for the JIVE1 model.
+    leverage : NDArray[np.float64]
+        Leverage values for each observation.
+    fitted_values : NDArray[np.float64]
+        Fitted values from the first pass of the JIVE1 estimator.
+    r_squared : float
+        R-squared value of the model.
+    adjusted_r_squared : float
+        Adjusted R-squared value of the model.
+    f_stat : float
+        F-statistic of the model.
+    standard_errors : NDArray[np.float64]
+        Robust standard errors for the estimated coefficients.
+    root_mse : float
+        Root mean squared error of the model.
+    pvals : list of float
+        p-values for the estimated coefficients.
+    tstats : list of float
+        t-statistics for the estimated coefficients.
+    cis : list of tuple
+        Confidence intervals for the estimated coefficients.
+    """
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
@@ -40,6 +68,23 @@ class JIVE1Result:
         self.cis=cis
 
     def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to JIVE1Result attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'beta':
             return self.beta
         elif key == 'leverage':
@@ -301,13 +346,3 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
                        pvals=pvals,
                        tstats=tstats,
                        cis=cis)
-
-
-## ## Future thoughts ###
-"""
-
-
-
-
-
-"""

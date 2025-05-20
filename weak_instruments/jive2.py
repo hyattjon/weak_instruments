@@ -13,6 +13,26 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class JIVE2Result:
+    """
+    Stores results for the JIVE2 estimator.
+
+    Attributes
+    ----------
+    beta : NDArray[np.float64]
+        Estimated coefficients for the JIVE2 model.
+    leverage : NDArray[np.float64]
+        Leverage values for each observation.
+    fitted_values : NDArray[np.float64]
+        Fitted values from the first pass of the JIVE2 estimator.
+    r_squared : float
+        R-squared value of the model.
+    adjusted_r_squared : float
+        Adjusted R-squared value of the model.
+    f_stat : float
+        F-statistic of the model.
+    standard_errors : NDArray[np.float64]
+        Robust standard errors for the estimated coefficients.
+    """
     def __init__(self, 
                  beta: NDArray[np.float64], 
                  leverage: NDArray[np.float64], 
@@ -30,6 +50,23 @@ class JIVE2Result:
         self.standard_errors = standard_errors
 
     def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to JIVE2Result attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'beta':
             return self.beta
         elif key == 'leverage':
@@ -50,6 +87,27 @@ class JIVE2Result:
 
     def __repr__(self):
         return f"JIVE1Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors})"
+
+    def summary(self):
+        """
+        Prints a summary of the JIVE2 results in a tabular format similar to statsmodels OLS and UJIVE1.
+        """
+        import pandas as pd
+        import numpy as np
+
+        summary_df = pd.DataFrame({
+            "Coefficient": self.beta.flatten(),
+            "Std. Error": np.sqrt(np.diag(self.standard_errors)) if self.standard_errors is not None else np.nan,
+        })
+
+        print("\nJIVE2 Regression Results")
+        print("=" * 80)
+        print(summary_df.round(6).to_string(index=False))
+        print("-" * 80)
+        print(f"R-squared: {self.r_squared:.6f}" if self.r_squared is not None else "R-squared: N/A")
+        print(f"Adjusted R-squared: {self.adjusted_r_squared:.6f}" if self.adjusted_r_squared is not None else "Adjusted R-squared: N/A")
+        print(f"F-statistic: {self.f_stat:.6f}" if self.f_stat is not None else "F-statistic: N/A")
+        print("=" * 80)
 
 
 def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
@@ -214,4 +272,10 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
         fs_F = ((np.sum((fs_fit - xbar) ** 2))/(q_fs-1))/((e_fs.T @ e_fs)/(N-q_fs))
 
 
-    return JIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v)
+    return JIVE2Result(beta=beta_jive2,
+                       leverage=leverage,
+                       fitted_values=fit,
+                       r_squared=r2,
+                       adjusted_r_squared=ar2,
+                       f_stat=F,
+                       standard_errors=robust_v)

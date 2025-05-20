@@ -14,6 +14,22 @@ logger.addHandler(handler)
 
 
 class HFULResult:
+    """
+    Stores results for the HFUL estimator.
+
+    Attributes
+    ----------
+    betas : NDArray[np.float64]
+        Estimated coefficients for the HFUL model.
+    se_list : list of float
+        Standard errors of the estimated coefficients.
+    tstat_list : list of float
+        t-statistics for the estimated coefficients.
+    pval_list : list of float
+        p-values for the estimated coefficients.
+    ci_list : list of tuple
+        Confidence intervals for the estimated coefficients.
+    """
     def __init__(self, betas, se_list, tstat_list, pval_list, ci_list):
         self.betas = betas
         self.se_list = se_list
@@ -22,6 +38,23 @@ class HFULResult:
         self.ci_list = ci_list
 
     def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to HFULResult attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'betas':
             return self.betas
         elif key == 'se_list':
@@ -38,8 +71,78 @@ class HFULResult:
     def __repr__(self):
         return f"HFULResult(betas={self.betas}, se_list={self.se_list}, tstat_list={self.tstat_list}, pval_list={self.pval_list}, ci_list={self.ci_list})"
 
+    def summary(self):
+        """
+        Prints a summary of the HFUL results in a tabular format similar to statsmodels OLS.
+        """
+        import pandas as pd
+        import numpy as np
+
+        summary_df = pd.DataFrame({
+            "Coefficient": self.betas.flatten(),
+            "Std. Error": np.array(self.se_list),
+            "t-stat": np.array(self.tstat_list),
+            "P>|t|": np.array(self.pval_list),
+            "Conf. Int. Low": [ci[0] for ci in self.ci_list],
+            "Conf. Int. High": [ci[1] for ci in self.ci_list]
+        })
+
+        print("\nHFUL Regression Results")
+        print("=" * 80)
+        print(summary_df.round(6).to_string(index=False))
+        print("=" * 80)
 
 def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, G: NDArray[np.float64] | None = None, talk: bool = False, colnames=None) -> HFULResult:
+    """
+    Calculates the HFUL estimator for weak instrument robust inference.
+
+    Parameters
+    ----------
+    Y : np.ndarray
+        A 1-D or 2-D numpy array of the dependent variable (N,).
+    X : np.ndarray
+        A 2-D numpy array of the endogenous regressors (N, L).
+    Z : np.ndarray
+        A 2-D numpy array of the instruments (N, K).
+    G : np.ndarray, optional
+        A 2-D numpy array of additional controls (N, G). Default is None.
+    talk : bool, optional
+        If True, provides detailed output for debugging purposes. Default is False.
+    colnames : list, optional
+        List of column names for the coefficients. Default is None.
+
+    Returns
+    -------
+    HFULResult
+        An object containing the following attributes:
+            - betas (NDArray[np.float64]): The estimated coefficients for the model.
+            - se_list (list of float): Standard errors for the estimated coefficients.
+            - tstat_list (list of float): t-statistics for the estimated coefficients.
+            - pval_list (list of float): p-values for the estimated coefficients.
+            - ci_list (list of tuple): Confidence intervals for the estimated coefficients.
+
+    Raises
+    ------
+    ValueError
+        If the dimensions of Y, X, or Z are inconsistent or invalid.
+
+    Notes
+    -----
+    - The HFUL estimator is designed for robust inference in the presence of weak instruments.
+    - The function computes coefficient estimates, standard errors, t-statistics, p-values, and confidence intervals.
+    - Additional controls can be included via the G argument.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from weak_instruments.HFUL import HFUL
+    >>> Y = np.random.randn(100)
+    >>> X = np.random.randn(100, 1)
+    >>> Z = np.random.randn(100, 2)
+    >>> result = HFUL(Y, X, Z)
+    >>> result.summary()
+    """
+    
     N = Y.shape[0]
 
     if X.ndim == 1:
@@ -145,4 +248,8 @@ def HFUL(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, G: NDArray[np.float64] | N
             logger.info("  p-value: %f", pval_list[i])
             logger.info("  95%% CI: (%f, %f)", ci_list[i][0], ci_list[i][1])
 
-    return HFULResult(betas=betas, se_list=se_list, tstat_list=tstat_list, pval_list=pval_list, ci_list=ci_list)
+    return HFULResult(betas=betas,
+                      se_list=se_list,
+                      tstat_list=tstat_list,
+                      pval_list=pval_list,
+                      ci_list=ci_list)

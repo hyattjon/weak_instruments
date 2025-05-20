@@ -8,12 +8,16 @@ Welcome to weak_instruments's documentation!
    liml
    jive1
    jive2
-   hful
-   lagrange_multiplier
-   lim_et_al
-   anderson_rubin
    ujive1
    ujive2
+   ijive
+   cjive
+   sjive
+   hful
+   lagrange_multiplier
+   anderson_rubin
+   tsls
+
 
 Indices and tables
 ==================

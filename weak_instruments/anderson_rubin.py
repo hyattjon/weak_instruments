@@ -14,11 +14,47 @@ logger.addHandler(handler)
 
 
 class ARTestResult:
+    """
+    Stores results for the Anderson-Rubin (AR) test.
+
+    Attributes
+    ----------
+    ar_stat : float
+        The Anderson-Rubin test statistic.
+    p_val : float
+        The p-value for the test statistic.
+
+    Methods
+    -------
+    summary()
+        Prints a summary of the Anderson-Rubin test results in a tabular format.
+    __getitem__(key)
+        Allows dictionary-like access to ARTestResult attributes.
+    __repr__()
+        Returns a string representation of the ARTestResult object.
+    """
     def __init__(self, ar_stat: float, p_val: float):
         self.ar_stat = ar_stat
         self.p_val = p_val
 
     def __getitem__(self, key: str):
+        """
+        Allows dictionary-like access to ARTestResult attributes.
+
+        Parameters
+        ----------
+        key : str
+            The attribute name to retrieve.
+
+        Returns
+        -------
+        The value of the requested attribute.
+
+        Raises
+        ------
+        KeyError
+            If the key is not a valid attribute name.
+        """
         if key == 'ar_stat':
             return self.ar_stat
         elif key == 'p_val':
@@ -26,23 +62,75 @@ class ARTestResult:
         else:
             raise KeyError(f"Invalid key '{key}'. Valid keys are 'ar_stat' and 'p_val'.")
 
+    def summary(self):
+        """
+        Prints a summary of the Anderson-Rubin test results in a tabular format.
+        """
+        import pandas as pd
+
+        summary_df = pd.DataFrame({
+            "AR Statistic": [self.ar_stat],
+            "P-value": [self.p_val]
+        })
+
+        print("\nAnderson-Rubin Test Results")
+        print("=" * 50)
+        print(summary_df.round(6).to_string(index=False))
+        print("=" * 50)
+
     def __repr__(self):
+        """
+        Returns a string representation of the ARTestResult object.
+        """
         return f"ARTestResult(ar_stat={self.ar_stat}, p_val={self.p_val})"
 
 
 def ar_test(Y: np.ndarray, X: np.ndarray, Z: np.ndarray, b: np.ndarray, talk: bool = False) -> ARTestResult:
     """
-    Calculates the Jackknife Anderson-Rubin test with cross-fit variance from Mikusheva and Sun (2022).
+    Calculates the Jackknife Anderson-Rubin (AR) test with cross-fit variance as described in Mikusheva and Sun (2022).
 
-    Args:
-        Y (np.ndarray): A 1-D numpy array of the dependent variable (N x 1).
-        X (np.ndarray): A 2-D numpy array of the endogenous regressors (N x L).
-        Z (np.ndarray): A 2-D numpy array of the instruments (N x K), where K > L.
-        b (np.ndarray): A 1-D numpy array of the parameter values to test.
-        talk (bool): If True, provides detailed output for debugging purposes. Default is False.
+    Parameters
+    ----------
+    Y : np.ndarray
+        A 1-D numpy array of the dependent variable (N,).
+    X : np.ndarray
+        A 2-D numpy array of the endogenous regressors (N, L).
+    Z : np.ndarray
+        A 2-D numpy array of the instruments (N, K), where K > L.
+    b : np.ndarray
+        A 1-D numpy array of the parameter values to test (L,).
+    talk : bool, optional
+        If True, provides detailed output for debugging purposes. Default is False.
 
-    Returns:
-        ARTestResult: A custom result object containing the AR test statistic and p-value.
+    Returns
+    -------
+    ARTestResult
+        An object containing the following attributes:
+            - ar_stat (float): The Anderson-Rubin test statistic.
+            - p_val (float): The p-value for the test statistic.
+
+    Raises
+    ------
+    ValueError
+        If the dimensions of Y, X, Z, or b are inconsistent or invalid.
+
+    Notes
+    -----
+    - The Anderson-Rubin test is a robust inference method for instrumental variables models, particularly in the presence of many or weak instruments.
+    - This implementation uses a jackknife approach with cross-fit variance estimation as recommended by Mikusheva and Sun (2022).
+    - The function computes the AR test statistic and its p-value under the null hypothesis that the parameter vector b is the true value.
+    - The test is robust to weak identification and is valid even when the number of instruments is large relative to the sample size.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> from weak_instruments.anderson_rubin import ar_test
+    >>> Y = np.array([1, 2, 3])
+    >>> X = np.array([[1], [2], [3]])
+    >>> Z = np.array([[1, 0], [0, 1], [1, 1]])
+    >>> b = np.array([0.5])
+    >>> result = ar_test(Y, X, Z, b)
+    >>> print(result)
     """
     # Adjust logging level based on the `talk` parameter
     if talk:
