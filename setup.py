@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='weak_instruments',  # Package name
-    version='0.1.1',  # Initial version
+    version='0.1.2',  # Initial version
     author='Jonathan Hyatt, Jacob Hutchings',
     author_email='your_email@example.com',  # Replace with your email
     description='A package for analyzing weak instruments in econometrics.',
