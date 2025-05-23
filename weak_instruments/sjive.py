@@ -96,10 +96,12 @@ class SJIVEResult:
         print("=" * 50)
 
 
-def sjive(
+def SJIVE(
     Y: NDArray[np.float64],
     X: NDArray[np.float64],
     Z: NDArray[np.float64],
+    W: NDArray[np.float64] | None = None,
+    G: NDArray[np.float64] | None = None,
     talk: bool = False
 ) -> NDArray[np.float64]:
     """
@@ -190,7 +192,7 @@ def sjive(
         message=result.message
     )
 
-data = np.loadtxt('new_ijive.csv', delimiter=',', skiprows=1)
+"""data = np.loadtxt('new_ijive.csv', delimiter=',', skiprows=1)
 z1 = data[:, 0].reshape(-1,1)
 z2 = data[:, 1].reshape(-1,1)
 x1 = data[:, 2].reshape(-1,1)
@@ -203,3 +205,4 @@ Z = np.hstack((z1,z2))
 bhat = sjive(y,X,Z)
 
 print(bhat)
+"""

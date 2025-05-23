@@ -121,7 +121,7 @@ class IJIVEResult:
         print("=" * 80)
 
 
-def IJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], talk: bool = False):
+def IJIVE(Y: NDArray[np.float64],  X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, W: NDArray[np.float64] | None = None, talk: bool = False):
     """
     Calculates the Instrumental Variable estimator using the IJIVE method.
     
@@ -191,7 +191,7 @@ def IJIVE(Y: NDArray[np.float64], W: NDArray[np.float64], X: NDArray[np.float64]
 
     if X.ndim == 1:
         X = X.reshape(-1, 1)
-    if W.ndim == 1:
+    if W is not None and W.ndim == 1:
         W = W.reshape(-1, 1)    
 
     N = Z.shape[0]

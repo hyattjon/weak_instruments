@@ -110,7 +110,7 @@ class JIVE2Result:
         print("=" * 80)
 
 
-def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
+def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], W: NDArray[np.float64] | None = None, G: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE2Result:
     """
     Calculates the JIVE2 estimator defined by Blomquist and Dahlberg (1999) in Jackknife IV estimation.
 
@@ -195,6 +195,22 @@ def JIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"Y has {Y.shape[0]} rows.\n")
     logger.debug(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
+
+    # Drop constant columns from X
+    constant_columns_X = np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_X):  # Check if there are any constant columns
+        logger.debug(f"X has constant columns. Dropping columns: {np.where(constant_columns_X)[0]}")
+        X = X[:, ~constant_columns_X]  # Keep only non-constant columns
+
+    # Drop constant columns from Z
+    constant_columns_Z = np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_Z):  # Check if there are any constant columns
+        logger.debug(f"Z has constant columns. Dropping columns: {np.where(constant_columns_Z)[0]}")
+        Z = Z[:, ~constant_columns_Z]  # Keep only non-constant columns
+
+    logger.debug(f"X shape after dropping constant columns: {X.shape}")
+    logger.debug(f"Z shape after dropping constant columns: {Z.shape}")
+
 
     ones = np.ones((N,1))
     X = np.hstack((ones, X))

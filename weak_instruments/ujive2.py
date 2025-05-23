@@ -108,7 +108,7 @@ class UJIVE2Result:
         print(f"Root MSE: {self.root_mse:.6f}")
         print("=" * 80)
 
-def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], W: NDArray[np.float64] | None = None, talk: bool = False) -> UJIVE2Result:
+def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, W: NDArray[np.float64] | None = None, talk: bool = False) -> UJIVE2Result:
     """
     Calculates the UJIVE2 estimator using a two-pass approach recommended by Angrist, Imbens, and Kreuger (1999) in Jackknife IV estimation.
 

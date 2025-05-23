@@ -141,7 +141,7 @@ class JIVE1Result:
         print(f"Root MSE: {root_mse:.4f}")
         print("=" * 80)
 
-def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], W: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
+def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, W: NDArray[np.float64] | None = None, talk: bool = False) -> JIVE1Result:
     """
     Calculates the JIVE1 estimator defined by Blomquist and Dahlberg (1999) in Jackknife IV estimation.
 
@@ -232,22 +232,20 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     logger.debug(f"Z has {Z.shape[0]} rows and {Z.shape[1]} columns.\n")
 
 
-    # Drop any constant columns from X and Z
-    if np.all(np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)):
-        if hasattr(X, 'columns'):  # Check if X has column names (e.g., a DataFrame)
-            dropped_columns = X.columns[np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
-            logger.debug(f"X has constant columns. Dropping columns: {list(dropped_columns)}")
-        else:
-            logger.debug("X has constant columns. Dropping constant columns.")
-        X = X[:, ~np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)]
+    # Drop constant columns from X
+    constant_columns_X = np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_X):  # Check if there are any constant columns
+        logger.debug(f"X has constant columns. Dropping columns: {np.where(constant_columns_X)[0]}")
+        X = X[:, ~constant_columns_X]  # Keep only non-constant columns
 
-    if np.all(np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)):
-        if hasattr(Z, 'columns'):  # Check if Z has column names (e.g., a DataFrame)
-            dropped_columns = Z.columns[np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
-            logger.debug(f"Z has constant columns. Dropping columns: {list(dropped_columns)}")
-        else:
-            logger.debug("Z has constant columns. Dropping constant columns.")
-        Z = Z[:, ~np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)]
+    # Drop constant columns from Z
+    constant_columns_Z = np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_Z):  # Check if there are any constant columns
+        logger.debug(f"Z has constant columns. Dropping columns: {np.where(constant_columns_Z)[0]}")
+        Z = Z[:, ~constant_columns_Z]  # Keep only non-constant columns
+
+    logger.debug(f"X shape after dropping constant columns: {X.shape}")
+    logger.debug(f"Z shape after dropping constant columns: {Z.shape}")
 
         
     #Add the constant
@@ -260,11 +258,11 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     if W is not None:
         if W.ndim == 1:
             W = W.reshape(-1, 1)
-    if W.shape[0] != N:
-        raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {W.shape[0]} and Y.shape[0] = {N}.")
-    X = np.hstack((X, W))
-    Z = np.hstack((Z, W))
-    logger.debug("Controls W have been added to both X and Z.\n")
+        if W.shape[0] != N:
+            raise ValueError(f"G must have the same number of rows as Y. Got G.shape[0] = {W.shape[0]} and Y.shape[0] = {N}.")
+        X = np.hstack((X, W))
+        Z = np.hstack((Z, W))
+        logger.debug("Controls W have been added to both X and Z.\n")
 
     # First pass to get fitted values and leverage
     P = Z @ np.linalg.inv(Z.T @ Z) @ Z.T
@@ -286,8 +284,9 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     X_jive1 = (fit - leverage * X) / (1 - leverage)
     logger.debug(f"Second pass complete.\n")
 
-    X_jive1 = np.hstack((ones, X_jive1, W))
-    X = np.hstack((ones, X, W))
+    if W is not None:
+        X_jive1 = np.hstack((ones, X_jive1, W))
+        X = np.hstack((ones, X, W))
 
     # Calculate the optimal estimate
     beta_jive1 = np.linalg.inv(X_jive1.T @ X_jive1) @ X_jive1.T @ Y
@@ -336,7 +335,7 @@ def JIVE1(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64]
     ar2 = 1 - (((1-r2)*(N-1))/(N-q))
 
     #Now, we can add some first stage statistics if the number of endogenous regressors is 1
-    if X.ndim == 2:
+    if X.ndim == 1:
         X_fs = X[:,1]
         fs_fit = Z @ np.linalg.inv(Z.T @ Z) @ Z.T @ X_fs
         xbar = np.mean(X_fs)

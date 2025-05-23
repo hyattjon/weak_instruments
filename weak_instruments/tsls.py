@@ -134,6 +134,7 @@ class TSLSResult:
 def TSLS(Y: NDArray[np.float64],
          X: NDArray[np.float64],
          Z: NDArray[np.float64],
+         G: NDArray[np.float64] | None = None,
          W: NDArray[np.float64] | None = None,
          talk: bool = False) -> TSLSResult:
     """
