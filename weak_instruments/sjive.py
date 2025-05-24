@@ -4,6 +4,16 @@ import logging
 from numpy.typing import NDArray
 from scipy.stats import t
 from scipy.optimize import minimize
+import logging
+
+# Set up the logger This helps with error outputs and stuff. We can use this instead of printing
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)  
+handler = logging.StreamHandler()
+formatter = logging.Formatter('%(message)s')  
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
 
 class SJIVEResult:
     """
@@ -158,6 +168,18 @@ def SJIVE(
         W = W.values
 
         
+    # Drop constant columns from X
+    constant_columns_X = np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_X):  # Check if there are any constant columns
+        logger.debug(f"X has constant columns. Dropping columns: {np.where(constant_columns_X)[0]}")
+        X = X[:, ~constant_columns_X]  # Keep only non-constant columns
+
+    # Drop constant columns from Z
+    constant_columns_Z = np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_Z):  # Check if there are any constant columns
+        logger.debug(f"Z has constant columns. Dropping columns: {np.where(constant_columns_Z)[0]}")
+        Z = Z[:, ~constant_columns_Z]  # Keep only non-constant columns
+
     U = Z @ np.linalg.inv(Z.T @ Z)
     P = Z.T
     D = np.diag(np.diag(U@P))

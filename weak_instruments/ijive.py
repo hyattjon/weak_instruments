@@ -189,6 +189,19 @@ def IJIVE(Y: NDArray[np.float64],  X: NDArray[np.float64], Z: NDArray[np.float64
     else:
         logger.setLevel(logging.WARNING)
 
+    # Drop constant columns from X
+    constant_columns_X = np.all(np.isclose(X, X[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_X):  # Check if there are any constant columns
+        logger.debug(f"X has constant columns. Dropping columns: {np.where(constant_columns_X)[0]}")
+        X = X[:, ~constant_columns_X]  # Keep only non-constant columns
+
+    # Drop constant columns from Z
+    constant_columns_Z = np.all(np.isclose(Z, Z[0, :], atol=1e-8), axis=0)
+    if np.any(constant_columns_Z):  # Check if there are any constant columns
+        logger.debug(f"Z has constant columns. Dropping columns: {np.where(constant_columns_Z)[0]}")
+        Z = Z[:, ~constant_columns_Z]  # Keep only non-constant columns
+        
+
     if X.ndim == 1:
         X = X.reshape(-1, 1)
     if W is not None and W.ndim == 1:

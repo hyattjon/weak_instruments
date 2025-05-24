@@ -188,8 +188,7 @@ def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
         raise ValueError(f"X and Y must have the same number of rows. Got X.shape[0] = {X.shape[0]} and Y.shape[0] = {N}.")
     if Z.shape[0] != N:
         raise ValueError(f"Z and Y must have the same number of rows. Got Z.shape[0] = {Z.shape[0]} and Y.shape[0] = {N}.")
-    if Z.shape[1] <= X.shape[1]:
-        logger.warning(f"Normally this estimator is used when Z has more columns than X. In this case Z has {Z.shape[1]} columns and X has {X.shape[1]} columns.")
+
 
     logger.debug(f"Y has {Y.shape[0]} rows.\n")
     logger.debug(f"X has {X.shape[0]} rows and {X.shape[1]} columns.\n")
