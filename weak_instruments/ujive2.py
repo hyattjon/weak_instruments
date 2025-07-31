@@ -23,12 +23,14 @@ class UJIVE2Result:
         fitted_values: Fitted values from the first pass.
         r_squared: R-squared value.
         adjusted_r_squared: Adjusted R-squared value.
-        f_stat: F-statistic.
+        f_stat: F-statistic for overall model significance.
         standard_errors: Robust standard errors.
         root_mse: Root mean squared error.
         pvals: p-values for coefficients.
         tstats: t-statistics for coefficients.
         cis: Confidence intervals for coefficients.
+        first_stage_f: F-statistic for first-stage regression (weak instruments test).
+        first_stage_f_pval: P-value for first-stage F-statistic.
     """
     def __init__(self, 
                  beta: NDArray[np.float64], 
@@ -41,7 +43,9 @@ class UJIVE2Result:
                  root_mse: float,
                  pvals: NDArray[np.float64] | None = None,
                  tstats: NDArray[np.float64] | None = None,
-                 cis: NDArray[np.float64] | None = None):
+                 cis: NDArray[np.float64] | None = None,
+                 first_stage_f: float | None = None,
+                 first_stage_f_pval: float | None = None):
         self.beta = beta
         self.leverage = leverage
         self.fitted_values = fitted_values
@@ -53,6 +57,8 @@ class UJIVE2Result:
         self.pvals = pvals
         self.tstats = tstats
         self.cis = cis
+        self.first_stage_f = first_stage_f
+        self.first_stage_f_pval = first_stage_f_pval
 
     def __getitem__(self, key: str):
         if key == 'beta':
@@ -77,11 +83,15 @@ class UJIVE2Result:
             return self.tstats
         elif key == 'cis':
             return self.cis
+        elif key == 'first_stage_f':
+            return self.first_stage_f
+        elif key == 'first_stage_f_pval':
+            return self.first_stage_f_pval
         else:
-            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', 'standard_errors', 'root_mse', 'pvals', 'tstats', or 'cis'.")
+            raise KeyError(f"Invalid key '{key}'. Valid keys are 'beta', 'leverage', 'fitted_values', 'r_squared', 'adjusted_r_squared', 'f_stat', 'standard_errors', 'root_mse', 'pvals', 'tstats', 'cis', 'first_stage_f', or 'first_stage_f_pval'.")
 
     def __repr__(self):
-        return f"UJIVE2Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis})"
+        return f"UJIVE2Result(beta={self.beta}, leverage={self.leverage}, fitted_values={self.fitted_values}, r_squared={self.r_squared}, adjusted_r_squared={self.adjusted_r_squared}, f_stat={self.f_stat}, standard_errors={self.standard_errors}, root_mse={self.root_mse}, pvals={self.pvals}, tstats={self.tstats}, cis={self.cis}, first_stage_f={self.first_stage_f}, first_stage_f_pval={self.first_stage_f_pval})"
 
     def summary(self):
         """
@@ -106,6 +116,16 @@ class UJIVE2Result:
         print(f"Adjusted R-squared: {self.adjusted_r_squared:.6f}")
         print(f"F-statistic: {self.f_stat:.6f}")
         print(f"Root MSE: {self.root_mse:.6f}")
+        
+        # Print first-stage F-statistic if available
+        if self.first_stage_f is not None:
+            print("-" * 80)
+            print(f"First-stage F-statistic: {self.first_stage_f:.6f}")
+            print(f"First-stage F p-value: {self.first_stage_f_pval:.6f}")
+            
+            # Add warnings for weak instruments based on Stock-Yogo critical values
+            if self.first_stage_f < 10:
+                print("WARNING: First-stage F < 10, indicating potentially weak instruments")
         print("=" * 80)
 
 def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64], G: NDArray[np.float64] | None = None, W: NDArray[np.float64] | None = None, talk: bool = False) -> UJIVE2Result:
@@ -310,4 +330,16 @@ def UJIVE2(Y: NDArray[np.float64], X: NDArray[np.float64], Z: NDArray[np.float64
         e_fs = X_fs - fs_fit
         fs_F = ((np.sum((fs_fit - xbar) ** 2)) / (q_fs - 1)) / ((e_fs.T @ e_fs) / (N - q_fs))
 
-    return UJIVE2Result(beta=beta_jive2, leverage=leverage, fitted_values=fit, r_squared=r2, adjusted_r_squared=ar2, f_stat=F, standard_errors=robust_v, root_mse=root_mse, pvals=np.array(pvals), tstats=np.array(tstats), cis=np.array(cis))
+    return UJIVE2Result(beta=beta_jive2, 
+                        leverage=leverage, 
+                        fitted_values=fit, 
+                        r_squared=r2, 
+                        adjusted_r_squared=ar2, 
+                        f_stat=F, 
+                        standard_errors=robust_v, 
+                        root_mse=root_mse, 
+                        pvals=np.array(pvals), 
+                        tstats=np.array(tstats), 
+                        cis=np.array(cis), 
+                        first_stage_f=fs_F if 'fs_F' in locals() else None, 
+                        first_stage_f_pval=None)
